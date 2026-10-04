@@ -19,9 +19,12 @@ const PRODUCTS = [
   { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: ["cantel"],
     desc: "Cítara de mesa de afinación pentatónica, de sonido envolvente y meditativo.",
     specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" }, sound: { kind: "pluck", base: 196 } },
-  { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: [],
-    desc: "Tabla de cortar maciza, terminada a mano con aceite apto para alimentos.",
-    specs: { Madera: "Cerezo", Acabado: "Aceite apto para alimentos" } },
+  { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: ["tabla-lisa", "tabla-lisa-detalle"],
+    desc: "Tabla de cortar maciza en dos maderas, con asas laterales talladas y terminada a mano con aceite apto para alimentos.",
+    specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Asas laterales talladas", Acabado: "Aceite apto para alimentos" } },
+  { id: 5, cat: "otros", name: "Tabla de cortar con canal", price: 30000, imgs: ["tabla-canal", "tabla-canal-perfil"],
+    desc: "Tabla maciza en dos maderas con canal perimetral para retener jugos. Ideal para carnes y asados.",
+    specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Canal perimetral para jugos", Acabado: "Aceite apto para alimentos" } },
 ];
 
 // Por completar: añadir aquí el resto de maderas que se trabajan.
