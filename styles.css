@@ -152,7 +152,7 @@ h4{font-weight:500;font-size:.95rem;color:var(--charcoal)}
   .modal{padding:0}.modal-box{max-height:100vh;height:100%}
   .info{padding:2rem 1.4rem}
 }
-@media (prefers-reduced-motion:reduce){.hero-video{display:none}*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* Catálogo por categorías */
 .category{margin-bottom:5rem}
@@ -161,7 +161,7 @@ h4{font-weight:500;font-size:.95rem;color:var(--charcoal)}
 .avatar{aspect-ratio:1/1;width:100%;display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);font-family:var(--serif);font-size:4rem;color:var(--wood);margin-bottom:1.5rem}
 .contact{text-align:center;display:flex;flex-direction:column;align-items:center;gap:1rem}
 .contact .muted{max-width:480px;margin-bottom:1rem}
-.phone{font-family:var(--serif);font-size:1.4rem;color:var(--charcoal)}
+.phone{font-family:var(--sans);font-weight:500;font-size:1.2rem;color:var(--charcoal)}
 a.btn.full{display:block}
 .nav nav{gap:1.8rem}
 .ph,.zoom.empty-img{background:repeating-linear-gradient(90deg,#c69a72 0 7px,#b5845d 7px 11px,#cfa47c 11px 20px);display:grid;place-items:center;color:rgba(255,255,255,.85);font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;height:100%}

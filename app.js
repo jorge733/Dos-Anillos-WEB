@@ -10,16 +10,13 @@ const CATEGORIES = [
 ];
 
 const PRODUCTS = [
-  { id: 1, cat: "flauta", name: "Flauta pentatónica en Do", price: 35000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle"],
+  { id: 1, cat: "flauta", name: "Flauta pentatónica en Re", price: 70000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle", "flautas-cruzadas-arcoiris", "flautas-cruzadas-verde"],
     desc: "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical.",
-    specs: { Madera: "Cerezo", Afinación: "Pentatónica en Do", Acabado: "Aceite natural" }, sound: { kind: "flute", base: 523 } },
-  { id: 2, cat: "flauta", name: "Flauta pentatónica en La", price: 35000, imgs: ["flautas-cruzadas-arcoiris", "flautas-cruzadas-verde"],
-    desc: "Versión en La, de timbre suave y cálido.",
-    specs: { Madera: "Cerezo", Afinación: "Pentatónica en La", Acabado: "Aceite natural" }, sound: { kind: "flute", base: 440 } },
+    specs: { Madera: "Cerezo", Afinación: "Pentatónica en Re" } },
   { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: ["cantel"],
     desc: "Cítara de mesa de afinación pentatónica, de sonido envolvente y meditativo.",
     specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" }, sound: { kind: "pluck", base: 196 } },
-  { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
+  { id: 4, cat: "otros", name: "Tabla de cortar", price: 45000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
     desc: "Tabla de cortar maciza en dos maderas, reversible: una cara lisa con asas laterales talladas y otra con canal perimetral para retener jugos. Terminada a mano con aceite apto para alimentos.",
     specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
 ];
