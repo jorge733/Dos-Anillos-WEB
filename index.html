@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dos Anillos · Instrumentos de madera artesanales</title>
-<meta name="description" content="Instrumentos de lutería artesanal: guitarras, violines, ukeleles y más, construidos con maderas nobles seleccionadas.">
+<meta name="description" content="Flautas pentatónicas, cánteles y piezas de madera hechas a mano. Del alma al sonido.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,110 +15,81 @@
 <body>
 
 <header class="nav" id="nav">
-  <a href="#" class="logo"><span class="rings" aria-hidden="true"><i></i><i></i></span>Dos Anillos</a>
+  <a href="#inicio" class="logo"><span class="rings" aria-hidden="true"><i></i><i></i></span>Dos Anillos</a>
   <nav>
+    <a href="#inicio">Inicio</a>
     <a href="#catalogo">Catálogo</a>
     <a href="#maderas">Maderas</a>
-    <a href="#envio">Envío</a>
-    <a href="#artesanos">Artesanos</a>
+    <a href="#envios">Envíos</a>
+    <a href="#quienes-somos">Quiénes somos</a>
+    <a href="#contacto">Contacto</a>
   </nav>
-  <button class="cart-btn" id="cartBtn" aria-label="Carrito">Carrito <span id="cartCount">0</span></button>
+  <a class="cart-btn" href="https://wa.me/56961772886" target="_blank" rel="noopener">WhatsApp</a>
 </header>
 
-<!-- 1. HERO VIDEO -->
-<section class="hero">
-  <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata"
+<!-- HERO VIDEO -->
+<section class="hero" id="inicio">
+  <video class="hero-video" autoplay muted loop playsinline preload="metadata"
          poster="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=70&auto=format">
     <source src="https://videos.pexels.com/video-files/5530361/5530361-hd_1920_1080_25fps.mp4" type="video/mp4">
   </video>
   <div class="hero-shade"></div>
   <div class="hero-content">
-    <p class="eyebrow">Lutería artesanal · desde 1987</p>
-    <h1>La madera recuerda<br><em>cada nota</em> que toca.</h1>
-    <p class="lead">Instrumentos construidos a mano, veta a veta, con maderas nobles curadas durante años.</p>
-    <a href="#catalogo" class="btn">Explorar el taller</a>
+    <p class="eyebrow">Lutería artesanal · desde 2024</p>
+    <h1>Del alma<br><em>al sonido</em></h1>
+    <p class="lead">Instrumentos y piezas de madera hechos a mano, veta a veta.</p>
+    <a href="#catalogo" class="btn">Ver catálogo</a>
   </div>
-  <button class="sound-btn" id="soundBtn" aria-pressed="false">
-    <span class="dot"></span><span id="soundLabel">Activar sonido</span>
-  </button>
-</section>
-
-<!-- Valores -->
-<section class="values">
-  <div><strong>Madera maciza</strong><span>Sin laminados en tapas</span></div>
-  <div><strong>Envío climatizado</strong><span>Humedad controlada 45–55%</span></div>
-  <div><strong>Seguro incluido</strong><span>Valor total del instrumento</span></div>
-  <div><strong>Garantía de por vida</strong><span>En estructura y encolados</span></div>
 </section>
 
 <!-- CATÁLOGO -->
 <section class="section" id="catalogo">
   <div class="section-head">
     <p class="eyebrow">Catálogo</p>
-    <h2>Instrumentos que respiran</h2>
+    <h2>Hecho a mano, pieza por pieza</h2>
   </div>
-
-  <div class="catalog">
-    <aside class="filters" id="filters">
-      <div class="filter-group">
-        <h4>Instrumento</h4>
-        <div data-filter="type"></div>
-      </div>
-      <div class="filter-group">
-        <h4>Madera</h4>
-        <div data-filter="wood"></div>
-      </div>
-      <div class="filter-group">
-        <h4>Acabado</h4>
-        <div data-filter="finish"></div>
-      </div>
-      <button class="link" id="clearFilters">Limpiar filtros</button>
-    </aside>
-    <div>
-      <p class="result-count" id="resultCount"></p>
-      <div class="grid" id="grid"></div>
-    </div>
-  </div>
+  <div id="catalogList"></div>
 </section>
 
 <!-- MADERAS -->
 <section class="section alt" id="maderas">
   <div class="section-head">
-    <p class="eyebrow">Tonewoods</p>
-    <h2>Cada madera, una voz</h2>
+    <p class="eyebrow">Maderas</p>
+    <h2>Cada madera, una voz única</h2>
   </div>
   <div class="woods" id="woods"></div>
 </section>
 
-<!-- ENVÍO -->
-<section class="section" id="envio">
-  <div class="shipping">
-    <div>
-      <p class="eyebrow">Garantía de climatización</p>
-      <h2>Viaja como si nunca hubiera salido del taller</h2>
-      <p class="muted">La madera es un material vivo: se dilata con la humedad y se contrae con el frío. Por eso cada envío sigue un protocolo diseñado por nuestros lutieres.</p>
-    </div>
-    <ol class="steps">
-      <li><span>01</span><div><h4>Aclimatación previa</h4><p>El instrumento reposa 72 h en cámara a 21 °C y 50% de humedad relativa antes de embalarse.</p></div></li>
-      <li><span>02</span><div><h4>Estuche rígido</h4><p>Estuche de madera contrachapada con interior de felpa y humidificador de esponja calibrado.</p></div></li>
-      <li><span>03</span><div><h4>Empaque térmico</h4><p>Caja exterior con aislante multicapa que amortigua cambios de temperatura durante 96 h.</p></div></li>
-      <li><span>04</span><div><h4>Sensor y seguro</h4><p>Registrador de temperatura/humedad incluido y seguro de transporte por el valor total, sin coste.</p></div></li>
-    </ol>
+<!-- ENVÍOS -->
+<section class="section" id="envios">
+  <div class="section-head">
+    <p class="eyebrow">Envíos</p>
+    <h2>Enviamos a todo Chile</h2>
+    <p class="muted">Cada pieza se embala con cuidado para que llegue en perfecto estado. Coordinamos el envío y sus costos contigo directamente por WhatsApp al momento de la compra.</p>
   </div>
 </section>
 
-<!-- ARTESANOS -->
-<section class="section alt" id="artesanos">
+<!-- QUIÉNES SOMOS -->
+<section class="section alt" id="quienes-somos">
   <div class="section-head">
-    <p class="eyebrow">Historias del artesano</p>
+    <p class="eyebrow">Quiénes somos</p>
     <h2>Las manos detrás de cada pieza</h2>
   </div>
   <div class="makers" id="makers"></div>
 </section>
 
+<!-- CONTACTO -->
+<section class="section contact" id="contacto">
+  <p class="eyebrow">Contacto</p>
+  <h2>Conversemos</h2>
+  <p class="muted">Todas las compras se realizan por WhatsApp. Escríbenos y te ayudamos a elegir.</p>
+  <a class="btn" href="https://wa.me/56961772886" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+  <p class="phone">+56 9 6177 2886</p>
+</section>
+
 <footer class="footer">
   <div class="logo"><span class="rings" aria-hidden="true"><i></i><i></i></span>Dos Anillos</div>
-  <p>Taller de lutería · Instrumentos de madera de calidad</p>
+  <p>Del alma al sonido</p>
   <p class="muted small">© 2026 Dos Anillos. Todos los derechos reservados.</p>
 </footer>
 
@@ -133,28 +104,26 @@
         <p class="hint">Pasa el cursor sobre la imagen para ver la veta en detalle</p>
       </div>
       <div class="info">
-        <p class="eyebrow" id="mMaker"></p>
+        <p class="eyebrow" id="mCat"></p>
         <h3 id="mTitle"></h3>
         <p class="price" id="mPrice"></p>
         <div class="tabs" role="tablist">
           <button class="tab active" data-tab="desc">Descripción</button>
           <button class="tab" data-tab="woods">Maderas</button>
-          <button class="tab" data-tab="audio">Audio</button>
+          <button class="tab" data-tab="audio" id="audioTab">Audio</button>
         </div>
         <div class="tab-panel" data-panel="desc" id="mDesc"></div>
         <div class="tab-panel" data-panel="woods" hidden><dl class="specs" id="mSpecs"></dl></div>
         <div class="tab-panel" data-panel="audio" hidden>
-          <p class="muted small">Muestras del timbre de este instrumento. Usa auriculares para apreciar la resonancia.</p>
+          <p class="muted small">Muestras del sonido de este instrumento.</p>
           <div class="samples" id="mSamples"></div>
         </div>
-        <button class="btn full" id="addCart">Añadir al carrito</button>
-        <p class="muted small center">Envío climatizado y seguro de transporte incluidos</p>
+        <a class="btn full center" id="buyBtn" target="_blank" rel="noopener">Comprar por WhatsApp</a>
       </div>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
 <script src="app.js"></script>
 </body>
 </html>
