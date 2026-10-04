@@ -30,7 +30,7 @@ const WOODS = [
 const MAKERS = [
   { name: "Nicolás Bordali" },
   { name: "Vicente Paz" },
-  { name: "Amador Orellana" },
+  { name: "Amador Orellana", img: "img/amador-orellana.jpg" },
 ];
 
 // ---------- Utilidades ----------
@@ -82,7 +82,7 @@ $("#woods").innerHTML = WOODS.map(w => `
   <h3>${w.name}</h3><p>${w.d}</p><p class="tone">${w.tone}</p></div>`).join("");
 $("#makers").innerHTML = MAKERS.map(m => `
   <article class="maker reveal">
-    <div class="avatar">${m.name.split(" ").map(s => s[0]).join("")}</div>
+    ${m.img ? `<img class="avatar" loading="lazy" src="${m.img}" alt="${m.name}">` : `<div class="avatar">${m.name.split(" ").map(s => s[0]).join("")}</div>`}
     <h3>${m.name}</h3><p class="role">Artesano · Dos Anillos</p></article>`).join("");
 
 // ---------- Modal producto ----------

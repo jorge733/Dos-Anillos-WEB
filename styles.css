@@ -190,3 +190,4 @@ a.btn.full{display:block}
 @media (hover:none){.arrow{opacity:1}}
 @media (max-width:900px){#catalogList .grid{grid-template-columns:1fr}}
 @media (min-width:600px) and (max-width:900px){#catalogList .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+img.avatar{object-fit:cover;object-position:center 20%;padding:0}
