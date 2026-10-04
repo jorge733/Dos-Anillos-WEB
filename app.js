@@ -1,7 +1,7 @@
 // ---------- Datos ----------
 // Fotos, precios y descripciones de ejemplo: reemplazar por las reales.
 const WHATSAPP = "56961772886";
-const U = (id, w = 900) => `https://images.unsplash.com/${id}?w=${w}&q=75&auto=format&fit=crop`;
+const U = id => `img/${id}.webp`;
 
 const CATEGORIES = [
   { key: "flauta", title: "Flautas pentatónicas" },
@@ -10,13 +10,13 @@ const CATEGORIES = [
 ];
 
 const PRODUCTS = [
-  { id: 1, cat: "flauta", name: "Flauta pentatónica en Do", price: 35000, imgs: [],
+  { id: 1, cat: "flauta", name: "Flauta pentatónica en Do", price: 35000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle"],
     desc: "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical.",
     specs: { Madera: "Cerezo", Afinación: "Pentatónica en Do", Acabado: "Aceite natural" }, sound: { kind: "flute", base: 523 } },
-  { id: 2, cat: "flauta", name: "Flauta pentatónica en La", price: 35000, imgs: [],
+  { id: 2, cat: "flauta", name: "Flauta pentatónica en La", price: 35000, imgs: ["flautas-cruzadas-arcoiris", "flautas-cruzadas-verde"],
     desc: "Versión en La, de timbre suave y cálido.",
     specs: { Madera: "Cerezo", Afinación: "Pentatónica en La", Acabado: "Aceite natural" }, sound: { kind: "flute", base: 440 } },
-  { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: [],
+  { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: ["cantel"],
     desc: "Cítara de mesa de afinación pentatónica, de sonido envolvente y meditativo.",
     specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" }, sound: { kind: "pluck", base: 196 } },
   { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: [],
