@@ -170,3 +170,23 @@ a.btn.full{display:block}
 .workshop{margin:0 0 4rem}
 .workshop img{width:100%;max-height:520px;object-fit:cover}
 .workshop figcaption{font-size:.78rem;color:var(--muted);margin-top:.6rem}
+
+/* Catálogo: productos lado a lado con carrusel de fotos */
+#catalogList .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:2.5rem}
+.cat-label{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem}
+.cat-label span{color:var(--wood);font-weight:600}
+.card .img{position:relative;aspect-ratio:4/3}
+.slide-bg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(18px) brightness(.85)}
+.card .img img{position:relative;object-fit:contain}
+.card:hover .img img{transform:none}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(250,247,241,.85);color:var(--charcoal);font-size:1.4rem;line-height:1;display:grid;place-items:center;opacity:0;transition:opacity .3s}
+.card:hover .arrow,.arrow:focus-visible{opacity:1}
+.arrow.prev{left:.6rem}.arrow.next{right:.6rem}
+.dots{position:absolute;bottom:.7rem;left:0;right:0;display:flex;justify-content:center;gap:.35rem}
+.dots i{width:6px;height:6px;border-radius:50%;background:rgba(250,247,241,.5)}
+.dots i.on{background:var(--paper)}
+.zoom{background:var(--charcoal)}
+.zoom img{object-fit:contain}
+@media (hover:none){.arrow{opacity:1}}
+@media (max-width:900px){#catalogList .grid{grid-template-columns:1fr}}
+@media (min-width:600px) and (max-width:900px){#catalogList .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

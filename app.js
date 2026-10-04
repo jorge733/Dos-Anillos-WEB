@@ -15,7 +15,7 @@ const PRODUCTS = [
     specs: { Madera: "Cerezo", Afinación: "Pentatónica en Re" } },
   { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: ["cantel"],
     desc: "Cítara de mesa de afinación pentatónica, de sonido envolvente y meditativo.",
-    specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" }, sound: { kind: "pluck", base: 196 } },
+    specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" } },
   { id: 4, cat: "otros", name: "Tabla de cortar", price: 45000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
     desc: "Tabla de cortar maciza en dos maderas, reversible: una cara lisa con asas laterales talladas y otra con canal perimetral para retener jugos. Terminada a mano con aceite apto para alimentos.",
     specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
@@ -44,19 +44,37 @@ const nav = $("#nav");
 addEventListener("scroll", () => nav.classList.toggle("solid", scrollY > innerHeight * 0.7), { passive: true });
 
 // ---------- Catálogo ----------
-$("#catalogList").innerHTML = CATEGORIES.map((c, i) => `
-  <div class="category">
-    <h3 class="cat-title"><span>${i + 1}.</span> ${c.title}</h3>
-    <div class="grid">${PRODUCTS.filter(p => p.cat === c.key).map(p => `
-      <article class="card" data-id="${p.id}" tabindex="0">
-        <div class="img">${p.imgs.length ? `<img loading="lazy" src="${U(p.imgs[0], 700)}" alt="${p.name}">` : `<div class="ph">Foto próximamente</div>`}</div>
-        <h3>${p.name}</h3>
-        <p class="meta">${Object.values(p.specs)[0]}</p>
-        <p class="price">${clp(p.price)}</p>
-      </article>`).join("")}</div>
-  </div>`).join("");
-$("#catalogList").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openProduct(+c.dataset.id); });
-$("#catalogList").addEventListener("keydown", e => { const c = e.target.closest(".card"); if (c && e.key === "Enter") openProduct(+c.dataset.id); });
+// La primera foto de cada producto es la portada: debe mostrar el producto entero.
+const slide = (p, i) => `
+  <div class="slide-bg" style="background-image:url(${U(p.imgs[i])})"></div>
+  <img loading="lazy" src="${U(p.imgs[i])}" alt="${p.name} — foto ${i + 1} de ${p.imgs.length}">`;
+$("#catalogList").innerHTML = `<div class="grid">${PRODUCTS.map(p => {
+  const n = CATEGORIES.findIndex(c => c.key === p.cat);
+  return `
+  <article class="card" data-id="${p.id}" data-i="0" tabindex="0">
+    <p class="cat-label"><span>${n + 1}.</span> ${CATEGORIES[n].title}</p>
+    <div class="img">${slide(p, 0)}${p.imgs.length > 1 ? `
+      <button class="arrow prev" aria-label="Foto anterior">‹</button>
+      <button class="arrow next" aria-label="Foto siguiente">›</button>
+      <div class="dots">${p.imgs.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : ""}
+    </div>
+    <h3>${p.name}</h3>
+    <p class="meta">${Object.values(p.specs)[0]}</p>
+    <p class="price">${clp(p.price)}</p>
+  </article>`;
+}).join("")}</div>`;
+$("#catalogList").addEventListener("click", e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  const arrow = e.target.closest(".arrow");
+  if (!arrow) return openProduct(+c.dataset.id);
+  const p = PRODUCTS.find(p => p.id === +c.dataset.id), len = p.imgs.length;
+  const i = (+c.dataset.i + (arrow.classList.contains("next") ? 1 : -1) + len) % len;
+  c.dataset.i = i;
+  $(".slide-bg", c).style.backgroundImage = `url(${U(p.imgs[i])})`;
+  Object.assign($("img", c), { src: U(p.imgs[i]), alt: `${p.name} — foto ${i + 1} de ${len}` });
+  $$(".dots i", c).forEach((d, j) => d.classList.toggle("on", j === i));
+});
+$("#catalogList").addEventListener("keydown", e => { const c = e.target.closest(".card"); if (c && e.key === "Enter" && e.target === c) openProduct(+c.dataset.id); });
 
 // ---------- Maderas y artesanos ----------
 $("#woods").innerHTML = WOODS.map(w => `
@@ -80,12 +98,6 @@ function openProduct(id) {
   $("#buyBtn").href = waLink(current);
   setMain(0);
   $("#thumbs").innerHTML = current.imgs.length > 1 ? current.imgs.map((id, i) => `<img src="${U(id, 160)}" data-i="${i}" class="${i ? "" : "active"}" alt="Vista ${i + 1}">`).join("") : "";
-  $("#audioTab").hidden = !current.sound;
-  if (current.sound) {
-    const notes = [["Nota base", 1], ["Quinta", 1.5], ["Octava", 2], ["Escala pentatónica", 0]];
-    $("#mSamples").innerHTML = notes.map(([n, r]) => `
-      <button class="sample" data-r="${r}"><span class="play">▶</span><span>${n}<small>${r ? Math.round(current.sound.base * r) + " Hz" : "Cinco notas"}</small></span></button>`).join("");
-  }
   switchTab("desc");
   modal.classList.add("open"); modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -114,31 +126,6 @@ function switchTab(t) {
 }
 $$(".tab").forEach(b => (b.onclick = () => switchTab(b.dataset.tab)));
 
-// ---------- Audio sintetizado (sustituir por grabaciones reales) ----------
-let ctx;
-function pluck(freq, t) {
-  const sr = ctx.sampleRate, n = sr * 3, buf = ctx.createBuffer(1, n, sr), out = buf.getChannelData(0);
-  const N = Math.round(sr / freq), ring = new Float32Array(N).map(() => Math.random() * 2 - 1);
-  for (let i = 0, p = 0; i < n; i++) { const q = (p + 1) % N; ring[p] = 0.996 * 0.5 * (ring[p] + ring[q]); out[i] = ring[p]; p = q; }
-  const src = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = 0.5;
-  src.buffer = buf; src.connect(g).connect(ctx.destination); src.start(t); return src;
-}
-function flute(freq, t, dur = 0.9) {
-  const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
-  o.type = "sine"; o.frequency.value = freq;
-  lfo.frequency.value = 5; lg.gain.value = freq * 0.006; lfo.connect(lg).connect(o.frequency);
-  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.35, t + 0.08); g.gain.setValueAtTime(0.35, t + dur - 0.15); g.gain.linearRampToValueAtTime(0, t + dur);
-  o.connect(g).connect(ctx.destination); o.start(t); lfo.start(t); o.stop(t + dur); lfo.stop(t + dur); return o;
-}
-$("#mSamples").addEventListener("click", e => {
-  const b = e.target.closest(".sample"); if (!b || !current.sound) return;
-  ctx ??= new (window.AudioContext || window.webkitAudioContext)();
-  const { kind, base } = current.sound, r = +b.dataset.r, now = ctx.currentTime, play = kind === "flute" ? flute : pluck;
-  const step = kind === "flute" ? 0.5 : 0.25;
-  const last = r ? play(base * r, now) : [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3].map((m, i) => play(base * m, now + i * step)).pop();
-  b.classList.add("playing"); last.onended = () => b.classList.remove("playing");
-});
-
 // ---------- Animaciones de entrada ----------
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && (e.target.classList.add("in"), io.unobserve(e.target))), { threshold: 0.15 });
-$$(".reveal, .section-head, .category").forEach(el => { el.classList.add("reveal"); io.observe(el); });
+$$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.observe(el); });
