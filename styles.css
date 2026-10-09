@@ -191,3 +191,39 @@ a.btn.full{display:block}
 @media (max-width:900px){#catalogList .grid{grid-template-columns:1fr}}
 @media (min-width:600px) and (max-width:900px){#catalogList .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 img.avatar{object-fit:cover;object-position:center top;padding:0}
+
+/* Logo original (blanco; en la barra sólida toma el color del texto) */
+.logo-img{display:block;width:150px;aspect-ratio:619/150;background:currentColor;-webkit-mask:url(logo-blanco-h.png) center/contain no-repeat;mask:url(logo-blanco-h.png) center/contain no-repeat}
+.logo-full{width:180px;height:auto;margin:0 auto}
+
+/* Historia y misión */
+.story{display:grid;grid-template-columns:1fr 1fr;gap:4rem}
+.story h3{font-size:1.8rem;margin-bottom:1rem;color:var(--wood)}
+.story p{color:var(--muted);margin-bottom:1rem;max-width:560px}
+
+/* Quiénes somos: taller + lista de lutieres */
+.team{display:grid;grid-template-columns:1.6fr 1fr;gap:4rem;align-items:center}
+.team .workshop{margin:0}
+.team-title{font-size:.72rem;font-family:var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+ul.makers{display:block;list-style:none}
+ul.makers li{font-family:var(--serif);font-size:1.8rem;color:var(--charcoal);padding:.9rem 0;border-bottom:1px solid var(--line)}
+ul.makers li:first-child{border-top:1px solid var(--line)}
+
+/* Sugerencias y reclamos */
+.feedback{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem;max-width:860px}
+.feedback label{display:flex;flex-direction:column;gap:.4rem;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.feedback .wide{grid-column:1/-1}
+.feedback input,.feedback select,.feedback textarea{font:inherit;font-size:.95rem;letter-spacing:0;text-transform:none;color:var(--charcoal);background:var(--paper);border:1px solid var(--line);padding:.8rem .9rem;border-radius:0;width:100%}
+.feedback textarea{resize:vertical}
+.feedback input:focus,.feedback select:focus,.feedback textarea:focus{outline:2px solid var(--sage);outline-offset:-1px}
+.feedback .btn{justify-self:start}
+.feedback .btn:disabled{opacity:.6;cursor:wait}
+.hp{position:absolute;left:-9999px}
+
+@media (max-width:900px){
+  .story,.team{grid-template-columns:1fr;gap:2.5rem}
+  .feedback{grid-template-columns:1fr}
+}
+.toast{transform:translate(-50%,calc(100% + 3rem))}
+.toast.show{transform:translate(-50%,0)}
+.section-head h2+.muted{margin-top:1.2rem}

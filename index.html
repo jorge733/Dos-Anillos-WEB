@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dos Anillos · Instrumentos de madera artesanales</title>
-<meta name="description" content="Flautas pentatónicas, cánteles y piezas de madera hechas a mano. Del alma al sonido.">
+<meta name="description" content="Flautas pentatónicas, kanteles y piezas de madera hechas a mano. Del alma al sonido.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,14 +15,16 @@
 <body>
 
 <header class="nav" id="nav">
-  <a href="#inicio" class="logo"><span class="rings" aria-hidden="true"><i></i><i></i></span>Dos Anillos</a>
+  <a href="#inicio" class="logo" aria-label="Dos Anillos, inicio"><span class="logo-img"></span></a>
   <nav>
     <a href="#inicio">Inicio</a>
     <a href="#catalogo">Catálogo</a>
     <a href="#maderas">Maderas</a>
+    <a href="#historia">Historia</a>
     <a href="#envios">Envíos</a>
     <a href="#quienes-somos">Quiénes somos</a>
     <a href="#contacto">Contacto</a>
+    <a href="#sugerencias">Sugerencias</a>
   </nav>
   <a class="cart-btn" href="https://wa.me/56961772886" target="_blank" rel="noopener">WhatsApp</a>
 </header>
@@ -35,7 +37,6 @@
     <p class="eyebrow">Lutería artesanal · desde 2024</p>
     <h1>Del alma<br><em>al sonido</em></h1>
     <p class="lead">Instrumentos y piezas de madera hechos a mano, veta a veta.</p>
-    <a href="#catalogo" class="btn">Ver catálogo</a>
   </div>
 </section>
 
@@ -57,8 +58,28 @@
   <div class="woods" id="woods"></div>
 </section>
 
+<!-- HISTORIA Y MISIÓN -->
+<section class="section" id="historia">
+  <div class="section-head">
+    <p class="eyebrow">Historia y misión</p>
+    <h2>Un proyecto que nace de una idea</h2>
+  </div>
+  <div class="story">
+    <article>
+      <h3>Nuestra historia</h3>
+      <p>Este proyecto comenzó como una idea: crear flautas pentatónicas para aportar a los colegios Waldorf de Chile y de todo el mundo. Empezó en 2024 y se fue desarrollando hasta 2025, cuando logramos obtener nuestra primera flauta sin errores. Fue un gran camino: tuvimos un desarrollo de más de 60 flautas para llegar a ella.</p>
+      <p>A finales de 2025 empezamos a fabricar nuestras primeras unidades para la venta en nuestro colegio Gabriela Mistral. La idea es crecer aún más este año y aportar vendiendo a todos los colegios Waldorf que quieran unirse a este hermoso proyecto.</p>
+    </article>
+    <article>
+      <h3>Nuestra misión</h3>
+      <p>Tenemos como objetivo que nuestras máquinas y herramientas estén creadas por nosotros mismos, como el torno que nos permite crear los cilindros y accesorios de la flauta, la lijadora con la que hacemos las boquillas o nuestra sierra huincha. Queremos que nuestros productos se sientan con la mayor calidad posible y con cariño en ellos: cada flauta pentatónica incluye un estuche y un limpiador hechos por nosotros.</p>
+      <p>En un futuro esperamos crear nuestros propios instrumentos de cuerda, como kanteles (ya tenemos algunos prototipos), u otras flautas como la flauta dulce. Queremos llegar a toda la comunidad de Chile y que todos los colegios que tengan primero básico puedan tener nuestras flautas.</p>
+    </article>
+  </div>
+</section>
+
 <!-- ENVÍOS -->
-<section class="section" id="envios">
+<section class="section alt" id="envios">
   <div class="section-head">
     <p class="eyebrow">Envíos</p>
     <h2>Enviamos a todo Chile</h2>
@@ -67,17 +88,22 @@
 </section>
 
 <!-- QUIÉNES SOMOS -->
-<section class="section alt" id="quienes-somos">
+<section class="section" id="quienes-somos">
   <div class="section-head">
     <p class="eyebrow">Quiénes somos</p>
     <h2>Las manos detrás de cada pieza</h2>
   </div>
-  <figure class="workshop"><img loading="lazy" src="img/taller-torno.webp" alt="Torno del taller Dos Anillos"><figcaption>Nuestro taller</figcaption></figure>
-  <div class="makers" id="makers"></div>
+  <div class="team">
+    <figure class="workshop"><img loading="lazy" src="img/taller-torno.webp" alt="Torno del taller Dos Anillos"><figcaption>Nuestro taller</figcaption></figure>
+    <div>
+      <h3 class="team-title">Lutieres</h3>
+      <ul class="makers" id="makers"></ul>
+    </div>
+  </div>
 </section>
 
 <!-- CONTACTO -->
-<section class="section contact" id="contacto">
+<section class="section alt contact" id="contacto">
   <p class="eyebrow">Contacto</p>
   <h2>Conversemos</h2>
   <p class="muted">Todas las compras se realizan por WhatsApp. Escríbenos y te ayudamos a elegir.</p>
@@ -85,8 +111,30 @@
   <p class="phone">+56 9 6177 2886</p>
 </section>
 
+<!-- SUGERENCIAS Y RECLAMOS -->
+<section class="section" id="sugerencias">
+  <div class="section-head">
+    <p class="eyebrow">Sugerencias y reclamos</p>
+    <h2>Tu opinión nos ayuda a mejorar</h2>
+    <p class="muted">Cuéntanos qué te pareció tu compra, qué podríamos hacer mejor o si tuviste algún problema. Leemos cada mensaje.</p>
+  </div>
+  <form class="feedback" id="feedback" action="https://formsubmit.co/dosanilloschile@gmail.com" method="POST">
+    <label>Tipo
+      <select name="Tipo" required>
+        <option>Sugerencia</option>
+        <option>Reclamo</option>
+      </select>
+    </label>
+    <label>Nombre<input name="Nombre" required autocomplete="name"></label>
+    <label>Correo<input name="email" type="email" required autocomplete="email"></label>
+    <label class="wide">Mensaje<textarea name="Mensaje" rows="5" required></textarea></label>
+    <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" type="submit">Enviar</button>
+  </form>
+</section>
+
 <footer class="footer">
-  <div class="logo"><span class="rings" aria-hidden="true"><i></i><i></i></span>Dos Anillos</div>
+  <div class="logo"><img class="logo-full" src="logo-blanco.png" alt="Dos Anillos" width="260" height="200"></div>
   <p>Del alma al sonido</p>
   <p class="muted small">© 2026 Dos Anillos. Todos los derechos reservados.</p>
 </footer>
@@ -116,6 +164,8 @@
     </div>
   </div>
 </div>
+
+<div class="toast" id="toast" role="status"></div>
 
 <script src="app.js"></script>
 </body>

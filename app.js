@@ -5,7 +5,7 @@ const U = id => `img/${id}.webp`;
 
 const CATEGORIES = [
   { key: "flauta", title: "Flautas pentatónicas" },
-  { key: "cantel", title: "Cántel" },
+  { key: "cantel", title: "Kantele" },
   { key: "otros", title: "Otros productos" },
 ];
 
@@ -13,10 +13,10 @@ const PRODUCTS = [
   { id: 1, cat: "flauta", name: "Flauta pentatónica en Re", price: 70000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle", "flautas-cruzadas-arcoiris", "flautas-cruzadas-verde"],
     desc: "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical.",
     specs: { Madera: "Cerezo", Afinación: "Pentatónica en Re" } },
-  { id: 3, cat: "cantel", name: "Cántel de 7 cuerdas", price: 120000, imgs: ["cantel"],
+  { id: 3, cat: "cantel", name: "Kantele de 7 cuerdas", price: 120000, imgs: ["cantel"],
     desc: "Cítara de mesa de afinación pentatónica, de sonido envolvente y meditativo.",
     specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" } },
-  { id: 4, cat: "otros", name: "Tabla de cortar", price: 45000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
+  { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
     desc: "Tabla de cortar maciza en dos maderas, reversible: una cara lisa con asas laterales talladas y otra con canal perimetral para retener jugos. Terminada a mano con aceite apto para alimentos.",
     specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
 ];
@@ -26,11 +26,10 @@ const WOODS = [
   { name: "Cerezo", c: "linear-gradient(90deg,#a8613f,#bf7550 25%,#9a5637 55%,#b86e49)", d: "Madera de grano fino y tono rojizo que se oscurece con el tiempo.", tone: "Cálido · equilibrado" },
 ];
 
-// Por completar: añadir biografía y foto de cada artesano.
 const MAKERS = [
   { name: "Nicolás Bordali" },
   { name: "Vicente Paz" },
-  { name: "Amador Orellana", img: "img/amador-orellana.jpg" },
+  { name: "Amador Orellana" },
 ];
 
 // ---------- Utilidades ----------
@@ -80,10 +79,7 @@ $("#catalogList").addEventListener("keydown", e => { const c = e.target.closest(
 $("#woods").innerHTML = WOODS.map(w => `
   <div class="wood reveal"><div class="swatch" style="background:${w.c}"></div>
   <h3>${w.name}</h3><p>${w.d}</p><p class="tone">${w.tone}</p></div>`).join("");
-$("#makers").innerHTML = MAKERS.map(m => `
-  <article class="maker reveal">
-    ${m.img ? `<img class="avatar" loading="lazy" src="${m.img}" alt="${m.name}">` : `<div class="avatar">${m.name.split(" ").map(s => s[0]).join("")}</div>`}
-    <h3>${m.name}</h3><p class="role">Artesano · Dos Anillos</p></article>`).join("");
+$("#makers").innerHTML = MAKERS.map(m => `<li>${m.name}</li>`).join("");
 
 // ---------- Modal producto ----------
 const modal = $("#modal");
@@ -125,6 +121,22 @@ function switchTab(t) {
   $$(".tab-panel").forEach(p => (p.hidden = p.dataset.panel !== t));
 }
 $$(".tab").forEach(b => (b.onclick = () => switchTab(b.dataset.tab)));
+
+// ---------- Sugerencias y reclamos ----------
+// FormSubmit reenvía el formulario a dosanilloschile@gmail.com (el primer envío pide activar el servicio desde ese correo).
+const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 4000); };
+$("#feedback").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, btn = $("button", f), data = Object.fromEntries(new FormData(f));
+  data._subject = `${data.Tipo} desde la web · Dos Anillos`;
+  btn.disabled = true; btn.textContent = "Enviando…";
+  try {
+    const r = await fetch("https://formsubmit.co/ajax/dosanilloschile@gmail.com", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(data) });
+    if (!r.ok) throw 0;
+    f.reset(); toast("¡Gracias! Recibimos tu mensaje.");
+  } catch { toast("No se pudo enviar. Escríbenos a dosanilloschile@gmail.com"); }
+  btn.disabled = false; btn.textContent = "Enviar";
+});
 
 // ---------- Animaciones de entrada ----------
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && (e.target.classList.add("in"), io.unobserve(e.target))), { threshold: 0.15 });
