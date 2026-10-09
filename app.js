@@ -52,6 +52,17 @@ const setMenu = open => { nav.classList.toggle("open", open); menuBtn.setAttribu
 menuBtn.onclick = () => setMenu(!nav.classList.contains("open"));
 $("#menu").addEventListener("click", e => e.target.closest("a") && setMenu(false));
 
+// Barra lateral contraíble (solo escritorio); se recuerda si quedó cerrada.
+const sideToggle = $("#sideToggle");
+const setSide = closed => {
+  document.body.classList.toggle("side-closed", closed);
+  sideToggle.setAttribute("aria-expanded", !closed);
+  sideToggle.setAttribute("aria-label", closed ? "Mostrar menú" : "Ocultar menú");
+  try { localStorage.setItem("sideClosed", closed ? "1" : ""); } catch {}
+};
+sideToggle.onclick = () => setSide(!document.body.classList.contains("side-closed"));
+try { if (localStorage.getItem("sideClosed")) { document.body.classList.add("no-anim"); setSide(true); requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove("no-anim"))); } } catch {}
+
 // ---------- Secciones: una a la vez, según el #ancla de la URL ----------
 const sections = $$("#main > section");
 const baseTitle = document.title;

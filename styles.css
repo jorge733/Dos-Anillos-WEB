@@ -290,3 +290,19 @@ html{scroll-behavior:auto}
 .care ul li::marker{color:var(--wood)}
 .care strong{font-weight:500;color:var(--charcoal)}
 @media (max-width:900px){.care>li{gap:1.1rem}}
+
+/* Barra lateral contraíble (escritorio) */
+.side-toggle{display:none}
+.no-anim,.no-anim *{transition:none!important}
+@media (min-width:901px){
+  .nav{transition:transform .35s ease,visibility 0s}
+  #main{transition:margin-left .35s ease}
+  .side-toggle{display:grid;place-items:center;position:fixed;top:1.3rem;left:206px;z-index:60;width:32px;height:32px;border-radius:50%;color:var(--bone);border:1px solid rgba(235,228,215,.3);background:var(--charcoal);transition:left .35s ease,background .2s,border-color .2s;-webkit-tap-highlight-color:transparent}
+  .side-toggle:hover{background:#3d3b37}
+  .side-toggle i{width:8px;height:8px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateX(1.5px) rotate(45deg);transition:transform .35s ease}
+  .side-closed .nav{transform:translateX(-100%);visibility:hidden;transition:transform .35s ease,visibility 0s .35s}
+  .side-closed #main{margin-left:0}
+  .side-closed .side-toggle{left:1.2rem;background:var(--paper);color:var(--charcoal);border-color:var(--line);box-shadow:0 2px 12px rgba(0,0,0,.2)}
+  .side-closed .side-toggle:hover{background:var(--bone)}
+  .side-closed .side-toggle i{transform:translateX(-1.5px) rotate(225deg)}
+}
