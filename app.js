@@ -21,9 +21,16 @@ const PRODUCTS = [
     specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
 ];
 
-// Por completar: añadir aquí el resto de maderas que se trabajan.
 const WOODS = [
-  { name: "Cerezo", c: "linear-gradient(90deg,#a8613f,#bf7550 25%,#9a5637 55%,#b86e49)", d: "Madera de grano fino y tono rojizo que se oscurece con el tiempo.", tone: "Cálido · equilibrado" },
+  { name: "Cerezo", c: "linear-gradient(90deg,#a8613f,#bf7550 25%,#9a5637 55%,#b86e49)", d: "Madera de grano fino y tono rojizo que se oscurece con el tiempo. Se tornea con precisión y deja un acabado suave y sedoso.", tone: "Cálido · equilibrado" },
+  { name: "Haya europea", c: "linear-gradient(90deg,#d8b08a,#e3bf9b 30%,#cfa37c 60%,#dcb592)", d: "Dura, densa y de grano muy fino y uniforme. Es estable, resiste bien el uso diario y su color claro rosado le da un aspecto limpio.", tone: "Claro · nítido" },
+  { name: "Nogal americano", c: "linear-gradient(90deg,#4a3326,#5e4130 30%,#3f2b20 60%,#563b2c)", d: "Tono chocolate profundo con vetas elegantes. Es muy estable, se trabaja con facilidad y gana belleza con los años.", tone: "Profundo · elegante" },
+  { name: "Nogal", c: "linear-gradient(90deg,#7a5638,#8d6544 30%,#6c4b30 60%,#84603f)", d: "Marrón dorado con vetas marcadas. Resistente y estable, con un pulido natural muy agradable al tacto.", tone: "Cálido · noble" },
+  { name: "Sirari", c: "linear-gradient(90deg,#8c4a2f,#a15a3a 30%,#7a3f27 60%,#965236)", d: "Madera tropical de tono marrón rojizo y veta intensa. Muy dura y densa, de gran durabilidad.", tone: "Firme · intenso" },
+  { name: "Roble chileno", c: "linear-gradient(90deg,#a8724f,#bb8460 30%,#966344 60%,#b07a57)", d: "Madera nativa del sur de Chile, de tono café rojizo y veta marcada. Dura, resistente y muy durable, con mucho carácter.", tone: "Nativo · robusto" },
+  { name: "Roble vaporizado", c: "linear-gradient(90deg,#8a5a42,#9c6a50 30%,#7a4e38 60%,#94634a)", d: "Roble chileno tratado con vapor: adquiere un color más parejo y profundo, y gana estabilidad al liberar tensiones internas de la madera.", tone: "Parejo · estable" },
+  { name: "Paquio", c: "linear-gradient(90deg,#a5502f,#b8623c 30%,#934528 60%,#ad5934)", d: "Una de las maderas más duras y densas, de tono rojizo anaranjado que se intensifica con el tiempo. Muy estable y durable.", tone: "Denso · resistente" },
+  { name: "Raulí", c: "linear-gradient(90deg,#b06a4f,#c27c5f 30%,#9e5d44 60%,#b8735a)", d: "Madera nativa chilena de tono rosado rojizo y grano fino y parejo. Liviana, estable y noble para trabajar.", tone: "Nativo · cálido" },
 ];
 
 const MAKERS = [
