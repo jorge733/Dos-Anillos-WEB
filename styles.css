@@ -278,3 +278,15 @@ html{scroll-behavior:auto}
   .nav.open nav a.active{color:var(--wood)}
   #main>.section{padding-top:7rem}
 }
+
+/* Cuidado y mantenimiento */
+.care{list-style:none;max-width:820px}
+.care>li{display:flex;gap:1.8rem;padding:2rem 0;border-top:1px solid var(--line)}
+.care>li:last-child{border-bottom:1px solid var(--line)}
+.care>li>span{font-family:var(--serif);font-size:2.4rem;color:var(--wood);line-height:1;min-width:1.4rem}
+.care h3{font-size:1.6rem;margin-bottom:.6rem}
+.care p,.care ul{color:var(--muted)}
+.care ul{margin-top:1rem;padding-left:1.1rem;display:grid;gap:.8rem}
+.care ul li::marker{color:var(--wood)}
+.care strong{font-weight:500;color:var(--charcoal)}
+@media (max-width:900px){.care>li{gap:1.1rem}}
