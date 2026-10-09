@@ -18,7 +18,7 @@ const PRODUCTS = [
     specs: { Caja: "Cerezo", Cuerdas: "7, afinación pentatónica", Acabado: "Aceite natural" } },
   { id: 4, cat: "otros", name: "Tabla de cortar", price: 25000, imgs: ["tabla-lisa", "tabla-canal", "tabla-canal-perfil", "tabla-lisa-detalle"],
     desc: "Tabla de cortar maciza en dos maderas, reversible: una cara lisa con asas laterales talladas y otra con canal perimetral para retener jugos. Terminada a mano con aceite apto para alimentos.",
-    specs: { Madera: "Dos maderas combinadas (por confirmar)", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
+    specs: { Madera: "Dos maderas combinadas", Detalles: "Reversible · asas talladas · canal para jugos", Acabado: "Aceite apto para alimentos" } },
 ];
 
 const WOODS = [
