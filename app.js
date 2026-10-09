@@ -41,6 +41,10 @@ const waLink = p => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola, 
 // ---------- Nav ----------
 const nav = $("#nav");
 addEventListener("scroll", () => nav.classList.toggle("solid", scrollY > innerHeight * 0.7), { passive: true });
+const menuBtn = $("#menuBtn");
+const setMenu = open => { nav.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", open); menuBtn.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú"); };
+menuBtn.onclick = () => setMenu(!nav.classList.contains("open"));
+$("#menu").addEventListener("click", e => e.target.closest("a") && setMenu(false));
 
 // ---------- Catálogo ----------
 // La primera foto de cada producto es la portada: debe mostrar el producto entero.
