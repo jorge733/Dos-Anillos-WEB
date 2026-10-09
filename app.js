@@ -10,7 +10,7 @@ const CATEGORIES = [
 ];
 
 const PRODUCTS = [
-  { id: 1, cat: "flauta", name: "Flauta pentatónica en La · 432\u00a0Hz", price: 70000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle", "flautas-cruzadas-arcoiris"],
+  { id: 1, cat: "flauta", name: "Flauta pentatónica en La 432\u00a0Hz", price: 70000, imgs: ["flautas-horizontal", "flautas-vertical", "flautas-detalle", "flautas-cruzadas-arcoiris"],
     desc: "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical.",
     specs: { Madera: "Cerezo", Afinación: "Pentatónica en La (432\u00a0Hz)" } },
   { id: 3, cat: "cantel", name: "Kantele de 7 cuerdas", price: 120000, imgs: ["cantel"],
