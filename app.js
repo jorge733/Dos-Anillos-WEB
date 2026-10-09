@@ -40,11 +40,29 @@ const waLink = p => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola, 
 
 // ---------- Nav ----------
 const nav = $("#nav");
-addEventListener("scroll", () => nav.classList.toggle("solid", scrollY > innerHeight * 0.7), { passive: true });
 const menuBtn = $("#menuBtn");
 const setMenu = open => { nav.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", open); menuBtn.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú"); };
 menuBtn.onclick = () => setMenu(!nav.classList.contains("open"));
 $("#menu").addEventListener("click", e => e.target.closest("a") && setMenu(false));
+
+// ---------- Secciones: una a la vez, según el #ancla de la URL ----------
+const sections = $$("#main > section");
+const baseTitle = document.title;
+function route() {
+  const id = location.hash.slice(1);
+  const page = sections.find(s => s.id === id) || sections[0];
+  sections.forEach(s => (s.hidden = s !== page));
+  $$("#menu a").forEach(a => {
+    const on = a.hash === "#" + page.id;
+    a.classList.toggle("active", on);
+    on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+  });
+  nav.classList.toggle("on-hero", page === sections[0]);
+  document.title = page === sections[0] ? baseTitle : `${$(`#menu a[href="#${page.id}"]`).textContent} · Dos Anillos`;
+  scrollTo({ top: 0, behavior: "instant" });
+}
+addEventListener("hashchange", route);
+route();
 
 // ---------- Catálogo ----------
 // La primera foto de cada producto es la portada: debe mostrar el producto entero.
