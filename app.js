@@ -24,7 +24,9 @@ $$("[data-md]").forEach(el => (el.innerHTML = inline(get(el.dataset.md))));
 $$("a.wa").forEach(a => (a.href = waLink()));
 $("#heroImg").src = C.hero.image;
 $("#teamImg").src = C.equipo.image;
-$("#mailBtn").href = `mailto:${C.general.email}`;
+const mailto = `mailto:${C.general.email}`;
+Object.assign($("#heroMail"), { href: mailto, textContent: C.general.email });
+$("#mailBtn").href = mailto;
 
 // ---------- Nav ----------
 const nav = $("#nav");
@@ -63,9 +65,9 @@ function route() {
 addEventListener("hashchange", route);
 route();
 
-// ---------- Flautas ----------
-// Todas las fotos de cada flauta a la vista, sin carrusel.
-$("#products").innerHTML = C.flautas.products.map(p => `
+// ---------- Catálogo ----------
+// Todas las fotos de cada producto a la vista, sin carrusel.
+$("#products").innerHTML = C.productos.products.map(p => `
   <article class="product">
     <div class="photos">${p.imgs.map((src, i) => `
       <figure><div class="photo-bg" style="background-image:url('${esc(src)}')"></div>

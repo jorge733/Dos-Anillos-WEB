@@ -9,19 +9,18 @@ const TABS = [
   { key: "general", title: "Datos generales", fields: [
     { k: "whatsapp", label: "Número de WhatsApp", hint: "Solo números, con el código de país (ej.: 56912345678). Es adonde llegan los botones de compra." },
     { k: "phone", label: "Teléfono que se muestra en Contacto" },
-    { k: "email", label: "Correo que recibe las sugerencias", hint: "Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
+    { k: "email", label: "Correo de contacto", hint: "Se muestra en Inicio y en Contacto, y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
   ] },
   { key: "hero", title: "Inicio", fields: [
     { k: "eyebrow", label: "Etiqueta pequeña" },
     { k: "title", label: "Título (primera línea)" },
     { k: "titleEm", label: "Título (segunda línea, en cursiva)" },
     { k: "lead", label: "Bajada", type: "textarea" },
-    { k: "button", label: "Texto del botón" },
     { k: "image", label: "Foto de fondo", type: "image" },
   ] },
-  { key: "flautas", title: "Flautas", fields: [...head,
-    { k: "products", label: "Flautas a la venta", type: "list", noun: "flauta", name: p => p.name,
-      blank: () => ({ name: "Nueva flauta", price: 0, imgs: [], desc: "", specs: [] }),
+  { key: "productos", title: "Catálogo", fields: [...head,
+    { k: "products", label: "Productos a la venta", type: "list", noun: "producto", name: p => p.name,
+      blank: () => ({ name: "Nuevo producto", price: 0, imgs: [], desc: "", specs: [] }),
       fields: [
         { k: "name", label: "Nombre" },
         { k: "price", label: "Precio (CLP)", type: "number" },
