@@ -165,12 +165,12 @@ async function webpay(method, suffix = "", body) {
 }
 
 // ---------- Correos (Resend) ----------
-async function mail(to, subject, html) {
+async function mail(to, subject, html, replyTo) {
   if (!env("RESEND_API_KEY") || !env("MAIL_FROM")) { console.warn("Correo no enviado: falta RESEND_API_KEY o MAIL_FROM."); return; }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: env("MAIL_FROM"), to, subject, html }),
+    body: JSON.stringify({ from: env("MAIL_FROM"), to, subject, html, reply_to: replyTo || undefined }),
   });
   if (!r.ok) console.error("Resend", r.status, await r.text());
 }
@@ -200,8 +200,8 @@ async function notifyPaid(o) {
   const c = content();
   const owners = String(c.general.orderEmails || c.general.email).split(/[,;\s]+/).filter(Boolean);
   await Promise.all([
-    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te avisaremos cuando despachemos tu pedido.`)),
-    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, "Llegó un pedido pagado por Webpay. Los datos también están en dosanillos.cl/admin.")),
+    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te avisaremos cuando despachemos tu pedido.`), c.general.email),
+    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, "Llegó un pedido pagado por Webpay. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente."), o.customer.email),
   ]);
 }
 
