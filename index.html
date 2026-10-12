@@ -43,7 +43,7 @@
     <a href="#contacto">Contacto</a>
     <a href="#sugerencias">Sugerencias</a>
   </nav>
-  <a class="cart-btn" href="https://wa.me/56961772886" target="_blank" rel="noopener">WhatsApp</a>
+  <a class="cart-btn wa" target="_blank" rel="noopener">WhatsApp</a>
   <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
   <p class="side-foot">Del alma al sonido<br>© 2026 Dos Anillos</p>
 </header>
@@ -53,21 +53,21 @@
 
 <!-- HERO -->
 <section class="hero" id="inicio">
-  <img class="hero-video" src="img/flautas-detalle.webp" alt="Flautas pentatónicas de madera Dos Anillos" fetchpriority="high">
+  <img class="hero-video" id="heroImg" alt="Flautas pentatónicas de madera Dos Anillos" fetchpriority="high">
   <div class="hero-shade"></div>
   <div class="hero-content">
-    <p class="eyebrow">Lutería artesanal · desde 2024</p>
-    <h1>Del alma<br><em>al sonido</em></h1>
-    <p class="lead">Instrumentos y piezas de madera hechos a mano, veta a veta.</p>
-    <a class="btn" href="#flautas">Ver flautas</a>
+    <p class="eyebrow" data-t="hero.eyebrow"></p>
+    <h1><span data-t="hero.title"></span><br><em data-t="hero.titleEm"></em></h1>
+    <p class="lead" data-t="hero.lead"></p>
+    <a class="btn" href="#flautas" data-t="hero.button"></a>
   </div>
 </section>
 
 <!-- FLAUTAS -->
 <section class="section" id="flautas">
   <div class="section-head">
-    <p class="eyebrow">Flautas</p>
-    <h2>Hechas a mano, pieza por pieza</h2>
+    <p class="eyebrow" data-t="flautas.eyebrow"></p>
+    <h2 data-t="flautas.title"></h2>
   </div>
   <div id="products"></div>
 </section>
@@ -75,8 +75,8 @@
 <!-- MADERAS -->
 <section class="section alt" id="maderas">
   <div class="section-head">
-    <p class="eyebrow">Maderas</p>
-    <h2>Cada madera, una voz única</h2>
+    <p class="eyebrow" data-t="maderas.eyebrow"></p>
+    <h2 data-t="maderas.title"></h2>
   </div>
   <div class="woods" id="woods"></div>
 </section>
@@ -84,86 +84,41 @@
 <!-- CUIDADO -->
 <section class="section" id="cuidado">
   <div class="section-head">
-    <p class="eyebrow">Cuidado</p>
-    <h2>Cuidado y mantenimiento de tu flauta</h2>
-    <p class="muted">Para garantizar que tu instrumento te acompañe durante muchos años manteniendo su mejor sonido y belleza, sigue estos sencillos pasos de cuidado diario y periódico.</p>
+    <p class="eyebrow" data-t="cuidado.eyebrow"></p>
+    <h2 data-t="cuidado.title"></h2>
+    <p class="muted" data-md="cuidado.intro"></p>
   </div>
-  <ol class="care">
-    <li>
-      <span>1</span>
-      <div>
-        <h3>Control de temperatura y humedad</h3>
-        <p>Guarda siempre la flauta en un entorno con condiciones estables. Evita exponerla a temperaturas o niveles de humedad extremos (ni demasiado fríos ni demasiado calientes), ya que los cambios bruscos afectan la estructura y afinación de la madera.</p>
-      </div>
-    </li>
-    <li>
-      <span>2</span>
-      <div>
-        <h3>Limpieza tras el uso</h3>
-        <p>Nunca dejes la flauta con exceso de humedad en su interior. Cada vez que termines de tocar, pasa su limpiador para retirar el exceso de saliva acumulado y mantenerla completamente seca antes de guardarla.</p>
-      </div>
-    </li>
-    <li>
-      <span>3</span>
-      <div>
-        <h3>Limpieza profunda del canal de viento</h3>
-        <p>Si notas que la flauta se escucha más tapada de lo normal o pierde claridad, realiza esta limpieza puntual:</p>
-        <ul>
-          <li><strong>Extracción del block:</strong> retira el block (la tapa superior que cierra el canal y la flauta) introduciendo desde abajo una varilla más larga que la flauta, para poder hacer presión sobre el block, empujarlo y sacarlo.</li>
-          <li><strong>Retiro de impurezas:</strong> usa un mondadientes o palito de madera para retirar con cuidado cualquier suciedad u obstrucción acumulada en el canal de viento.</li>
-          <li><strong>Verificación y reensamblado:</strong> comprueba que la zona haya quedado limpia e impecable. Coloca el block nuevamente en su posición original, sopla para probar el instrumento y confirma que recuperó su sonido óptimo.</li>
-        </ul>
-      </div>
-    </li>
-    <li>
-      <span>4</span>
-      <div>
-        <h3>Hidratación anual</h3>
-        <p>Una vez al año, aplica una capa fina de aceite de almendras tanto por el interior como por el exterior del instrumento. Esto nutre la madera, evita que se reseque o se agriete y asegura su durabilidad a largo plazo.</p>
-      </div>
-    </li>
-  </ol>
+  <ol class="care" id="care"></ol>
 </section>
 
 <!-- HISTORIA Y MISIÓN -->
 <section class="section" id="historia">
   <div class="section-head">
-    <p class="eyebrow">Historia y misión</p>
-    <h2>Un proyecto que nace de una idea</h2>
+    <p class="eyebrow" data-t="historia.eyebrow"></p>
+    <h2 data-t="historia.title"></h2>
   </div>
-  <div class="story">
-    <article>
-      <h3>Nuestra historia</h3>
-      <p>Este proyecto comenzó como una idea: crear flautas pentatónicas para aportar a los colegios Waldorf de Chile y de todo el mundo. Empezó en 2024 y se fue desarrollando hasta 2025, cuando logramos obtener nuestra primera flauta sin errores. Fue un gran camino: tuvimos un desarrollo de más de 60 flautas para llegar a ella.</p>
-      <p>A finales de 2025 empezamos a fabricar nuestras primeras unidades para la venta en nuestro colegio Gabriela Mistral. La idea es crecer aún más este año y aportar vendiendo a todos los colegios Waldorf que quieran unirse a este hermoso proyecto.</p>
-    </article>
-    <article>
-      <h3>Nuestra misión</h3>
-      <p>Tenemos como objetivo que nuestras máquinas y herramientas estén creadas por nosotros mismos, como el torno que nos permite crear los cilindros y accesorios de la flauta, la lijadora con la que hacemos las boquillas o nuestra sierra huincha. Queremos que nuestros productos se sientan con la mayor calidad posible y con cariño en ellos: cada flauta pentatónica incluye un estuche y un limpiador hechos por nosotros.</p>
-      <p>En un futuro esperamos crear nuestros propios instrumentos de cuerda, como kanteles (ya tenemos algunos prototipos), u otras flautas como la flauta dulce. Queremos llegar a toda la comunidad de Chile y que todos los colegios que tengan primero básico puedan tener nuestras flautas.</p>
-    </article>
-  </div>
+  <div class="story" id="story"></div>
 </section>
 
 <!-- ENVÍOS -->
 <section class="section alt" id="envios">
   <div class="section-head">
-    <p class="eyebrow">Envíos</p>
-    <h2>Enviamos a todo Chile</h2>
-    <p class="muted">Cada pieza se embala con cuidado para que llegue en perfecto estado. Coordinamos el envío y sus costos contigo directamente por WhatsApp al momento de la compra.</p>
+    <p class="eyebrow" data-t="envios.eyebrow"></p>
+    <h2 data-t="envios.title"></h2>
+    <p class="muted" data-md="envios.intro"></p>
   </div>
 </section>
 
 <!-- QUIÉNES SOMOS -->
 <section class="section" id="quienes-somos">
   <div class="section-head">
-    <p class="eyebrow">Quiénes somos</p>
-    <h2>Las manos detrás de cada pieza</h2>
+    <p class="eyebrow" data-t="equipo.eyebrow"></p>
+    <h2 data-t="equipo.title"></h2>
   </div>
   <div class="team">
-    <figure class="workshop"><img loading="lazy" src="img/taller-torno.webp" alt="Torno del taller Dos Anillos"><figcaption>Nuestro taller</figcaption></figure>
+    <figure class="workshop"><img loading="lazy" id="teamImg" alt="Taller Dos Anillos"><figcaption data-t="equipo.caption"></figcaption></figure>
     <div>
-      <h3 class="team-title">Lutieres</h3>
+      <h3 class="team-title" data-t="equipo.teamTitle"></h3>
       <ul class="makers" id="makers"></ul>
     </div>
   </div>
@@ -171,21 +126,21 @@
 
 <!-- CONTACTO -->
 <section class="section alt contact" id="contacto">
-  <p class="eyebrow">Contacto</p>
-  <h2>Conversemos</h2>
-  <p class="muted">Todas las compras se realizan por WhatsApp. Escríbenos y te ayudamos a elegir.</p>
-  <a class="btn" href="https://wa.me/56961772886" target="_blank" rel="noopener">Escribir por WhatsApp</a>
-  <p class="phone">+56 9 6177 2886</p>
+  <p class="eyebrow" data-t="contacto.eyebrow"></p>
+  <h2 data-t="contacto.title"></h2>
+  <p class="muted" data-md="contacto.intro"></p>
+  <a class="btn wa" target="_blank" rel="noopener" data-t="contacto.button"></a>
+  <p class="phone" data-t="general.phone"></p>
 </section>
 
 <!-- SUGERENCIAS Y RECLAMOS -->
 <section class="section" id="sugerencias">
   <div class="section-head">
-    <p class="eyebrow">Sugerencias y reclamos</p>
-    <h2>Tu opinión nos ayuda a mejorar</h2>
-    <p class="muted">Cuéntanos qué te pareció tu compra, qué podríamos hacer mejor o si tuviste algún problema. Leemos cada mensaje.</p>
+    <p class="eyebrow" data-t="sugerencias.eyebrow"></p>
+    <h2 data-t="sugerencias.title"></h2>
+    <p class="muted" data-md="sugerencias.intro"></p>
   </div>
-  <form class="feedback" id="feedback" action="https://formsubmit.co/dosanilloschile@gmail.com" method="POST">
+  <form class="feedback" id="feedback" method="POST">
     <label>Tipo
       <select name="Tipo" required>
         <option>Sugerencia</option>
@@ -208,6 +163,7 @@
 
 <div class="toast" id="toast" role="status"></div>
 
+<script src="content.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

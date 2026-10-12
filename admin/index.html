@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel · Dos Anillos</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<form class="login" id="login">
+  <img src="../logo.png" alt="Dos Anillos">
+  <h1>Panel del sitio</h1>
+  <label>Contraseña<input type="password" name="password" required autocomplete="current-password" autofocus></label>
+  <button class="btn" type="submit">Entrar</button>
+  <p class="error" id="loginError" role="alert"></p>
+</form>
+
+<div class="app" id="app" hidden>
+  <header class="bar">
+    <strong>Panel · Dos Anillos</strong>
+    <span class="status" id="status" role="status"></span>
+    <a class="ghost" href="../" target="_blank" rel="noopener">Ver sitio</a>
+    <button class="ghost" id="logout" type="button">Salir</button>
+    <button class="btn" id="save" type="button" disabled>Guardar y publicar</button>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <main class="editor" id="editor"></main>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
