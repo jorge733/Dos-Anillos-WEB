@@ -135,7 +135,7 @@ a.btn.full{display:block}
 .workshop img{width:100%;max-height:520px;object-fit:cover}
 .workshop figcaption{font-size:.78rem;color:var(--muted);margin-top:.6rem}
 
-/* Productos: todas las fotos a la vista + ficha */
+/* Catálogo: todas las fotos a la vista + ficha */
 .product{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:3.5rem;align-items:start}
 .photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
 .photos figure{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--bone);margin:0}

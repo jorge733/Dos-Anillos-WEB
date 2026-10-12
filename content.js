@@ -15,7 +15,7 @@ window.CONTENT = {
     "image": "img/flautas-detalle.webp"
   },
   "productos": {
-    "eyebrow": "Productos",
+    "eyebrow": "Catálogo",
     "title": "Hechas a mano, pieza por pieza",
     "products": [
       {

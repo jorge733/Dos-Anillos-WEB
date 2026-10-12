@@ -21,7 +21,7 @@ const TABS = [
     { k: "lead", label: "Bajada", type: "textarea" },
     { k: "image", label: "Foto de fondo", type: "image" },
   ] },
-  { key: "productos", title: "Productos", fields: [...head,
+  { key: "productos", title: "Catálogo", fields: [...head,
     { k: "products", label: "Productos a la venta", type: "list", noun: "producto", name: p => p.name,
       blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, package: { weight: 0.3, length: 40, width: 10, height: 6 }, imgs: [], desc: "", specs: [] }),
       fields: [

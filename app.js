@@ -64,7 +64,7 @@ function route() {
 addEventListener("hashchange", route);
 route();
 
-// ---------- Productos ----------
+// ---------- Catálogo ----------
 // Todas las fotos de cada producto a la vista, sin carrusel.
 $("#products").innerHTML = C.productos.products.map(p => `
   <article class="product">
@@ -143,7 +143,7 @@ function renderCart() {
       <li><img src="${esc(p.imgs[0])}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}</p></div>
         <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno">+</button></div>
         <strong>${clp(p.price * i.qty)}</strong></li>`; }).join("")}
-    </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#productos">Ver productos</a>`;
+    </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#catalogo">Ver catálogo</a>`;
   renderTotals();
 }
 
