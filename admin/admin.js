@@ -6,10 +6,13 @@ const head = [
   { k: "title", label: "Título" },
 ];
 const TABS = [
+  { key: "pedidos", title: "Pedidos", custom: () => renderOrders() },
   { key: "general", title: "Datos generales", fields: [
-    { k: "whatsapp", label: "Número de WhatsApp", hint: "Solo números, con el código de país (ej.: 56912345678). Es adonde llegan los botones de compra." },
+    { k: "whatsapp", label: "Número de WhatsApp", hint: "Solo números, con el código de país (ej.: 56912345678). Es adonde llegan los botones de contacto." },
     { k: "phone", label: "Teléfono que se muestra en Contacto" },
     { k: "email", label: "Correo que recibe las sugerencias", hint: "Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
+    { k: "orderEmails", label: "Correos que reciben el aviso de cada venta", hint: "Puedes poner varios separados por comas." },
+    { k: "originCounty", label: "Comuna desde donde se despachan los envíos", type: "commune", hint: "Chilexpress calcula el costo del envío desde esta comuna." },
   ] },
   { key: "hero", title: "Inicio", fields: [
     { k: "eyebrow", label: "Etiqueta pequeña" },
@@ -21,10 +24,16 @@ const TABS = [
   ] },
   { key: "flautas", title: "Flautas", fields: [...head,
     { k: "products", label: "Flautas a la venta", type: "list", noun: "flauta", name: p => p.name,
-      blank: () => ({ name: "Nueva flauta", price: 0, imgs: [], desc: "", specs: [] }),
+      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nueva flauta", price: 0, package: { weight: 0.3, length: 40, width: 10, height: 6 }, imgs: [], desc: "", specs: [] }),
       fields: [
         { k: "name", label: "Nombre" },
-        { k: "price", label: "Precio (CLP)", type: "number" },
+        { k: "price", label: "Precio (CLP)", type: "number", step: 500 },
+        { k: "package", label: "Paquete para el envío (ya embalado, con estuche)", type: "group", hint: "Chilexpress cobra según el peso y el tamaño del paquete.", fields: [
+          { k: "weight", label: "Peso (kg)", type: "number", step: 0.05 },
+          { k: "length", label: "Largo (cm)", type: "number", step: 1 },
+          { k: "width", label: "Ancho (cm)", type: "number", step: 1 },
+          { k: "height", label: "Alto (cm)", type: "number", step: 1 },
+        ] },
         { k: "imgs", label: "Fotos", type: "gallery", hint: "La primera es la principal. Usa las flechas para ordenarlas." },
         { k: "desc", label: "Descripción", type: "textarea", hint: MD },
         { k: "specs", label: "Características", type: "list", noun: "característica", name: s => s.label, row: true,
@@ -140,7 +149,23 @@ function field(f, obj, rerender) {
     case "textarea":
       return h("label", {}, f.label, h("textarea", { value: v ?? "", rows: f.rows || 4, oninput: e => set(e.target.value) }), hint);
     case "number":
-      return h("label", {}, f.label, h("input", { type: "number", min: 0, step: 500, value: v ?? 0, oninput: e => set(Number(e.target.value) || 0) }), hint);
+      return h("label", {}, f.label, h("input", { type: "number", min: 0, step: f.step || 1, value: v ?? 0, oninput: e => set(Number(e.target.value) || 0) }), hint);
+    case "group":
+      if (!v) obj[f.k] = {};
+      return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
+        h("div", { className: "row" }, ...f.fields.map(sub => field(sub, obj[f.k], rerender))));
+    case "commune": {
+      const select = h("select", { disabled: true, onchange: e => set(e.target.value) }, h("option", { value: v || "", textContent: "Cargando comunas de Chilexpress…" }));
+      const note = h("span", { className: "hint", textContent: f.hint });
+      communes().then(list => {
+        const regions = [...new Set(list.map(c => c.region))];
+        select.replaceChildren(h("option", { value: "", textContent: "Elige una comuna" }),
+          ...regions.map(r => h("optgroup", { label: r }, ...list.filter(c => c.region === r).sort((a, b) => a.name.localeCompare(b.name, "es"))
+            .map(c => h("option", { value: c.code, textContent: c.name, selected: c.code === v })))));
+        select.disabled = false;
+      }).catch(e => { select.firstChild.textContent = v ? `Código ${v}` : "No disponible"; note.textContent = `No se pudieron cargar las comunas: ${e.message}`; note.style.color = "var(--error)"; });
+      return h("label", {}, f.label, select, note);
+    }
     case "swatch": {
       const sw = h("div", { className: "swatch" }); sw.style.background = v;
       const color = h("input", { type: "color", value: baseColor(v), oninput: e => { set(gradient(e.target.value)); sw.style.background = obj[f.k]; } });
@@ -194,9 +219,75 @@ function render() {
   $("#tabs").replaceChildren(...TABS.map(t => h("button", { type: "button", role: "tab", textContent: t.title, ariaSelected: String(t.key === tab),
     onclick: () => { tab = t.key; render(); scrollTo(0, 0); } })));
   const t = TABS.find(t => t.key === tab);
+  if (t.custom) return t.custom();
   const draw = () => $("#editor").replaceChildren(h("h2", { textContent: t.title }), ...t.fields.map(f => field(f, content[t.key], draw)));
   draw();
 }
+
+// ---------- Pedidos ----------
+const PAID = ["pagado", "enviado", "entregado"];
+const STATUS = { pendiente: "Pago sin terminar", rechazado: "Pago rechazado", anulado: "Pago anulado", pagado: "Pagado · por enviar", enviado: "Enviado", entregado: "Entregado" };
+const PAY_TYPES = { VD: "Débito", VP: "Prepago", VN: "Crédito", VC: "Crédito en cuotas", SI: "3 cuotas sin interés", S2: "2 cuotas sin interés", NC: "Cuotas sin interés" };
+const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
+const when = t => new Date(t).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" });
+let showAll = false;
+
+async function renderOrders() {
+  const ed = $("#editor");
+  const list = h("div", { className: "list" }, h("p", { className: "hint", textContent: "Cargando pedidos…" }));
+  const filter = h("label", { className: "check" }, h("input", { type: "checkbox", checked: showAll, onchange: e => { showAll = e.target.checked; renderOrders(); } }), "Mostrar también los pagos rechazados, anulados o sin terminar");
+  ed.replaceChildren(h("div", { className: "orders-head" }, h("h2", { textContent: "Pedidos" }), h("button", { type: "button", className: "ghost", textContent: "Actualizar", onclick: renderOrders })), filter, list);
+  let all;
+  try { ({ orders: all } = await api("orders")); }
+  catch (e) { return list.replaceChildren(h("p", { className: "error", textContent: e.message })); }
+  if (tab !== "pedidos") return;
+  const paid = all.filter(o => PAID.includes(o.status));
+  const shown = showAll ? all : paid;
+  const toSend = paid.filter(o => o.status === "pagado").length;
+  list.replaceChildren(
+    h("p", { className: "summary" }, `${paid.length} ${paid.length === 1 ? "venta" : "ventas"} · ${clp(paid.reduce((s, o) => s + o.total, 0))} en total`, toSend ? h("strong", { textContent: ` · ${toSend} por enviar` }) : null),
+    ...(shown.length ? shown.map(orderCard) : [h("p", { className: "hint", textContent: "Todavía no hay pedidos." })]));
+}
+
+function orderCard(o) {
+  const c = o.customer, p = o.payment || {};
+  const dl = (...pairs) => h("dl", { className: "facts" }, ...pairs.filter(([, v]) => v).flatMap(([k, v]) => [h("dt", { textContent: k }), h("dd", {}, v)]));
+  const link = (href, text) => h("a", { href, textContent: text, target: "_blank", rel: "noopener" });
+  const card = h("details", { className: `item order st-${o.status}`, open: o.status === "pagado" },
+    h("summary", { className: "item-head" },
+      h("strong", { textContent: `${c.name} · ${clp(o.total)}` }),
+      h("span", { className: `badge st-${o.status}`, textContent: STATUS[o.status] || o.status })),
+    h("p", { className: "hint", textContent: `Pedido ${o.id} · ${when(o.paidAt || o.createdAt)}` }),
+    dl(["Correo", link(`mailto:${c.email}`, c.email)],
+       ["Teléfono", link(`https://wa.me/${c.phone.replace(/D/g, "")}`, c.phone)],
+       ["Dirección", `${c.address}, ${c.countyName}, ${c.region}`],
+       ["Notas", c.notes]),
+    h("ul", { className: "lines" },
+      ...o.lines.map(l => h("li", {}, h("span", { textContent: `${l.qty} × ${l.name}` }), h("span", { textContent: clp(l.price * l.qty) }))),
+      h("li", {}, h("span", { textContent: `Envío Chilexpress · ${o.shipping.name}` }), h("span", { textContent: clp(o.shipping.price) })),
+      h("li", { className: "sum" }, h("span", { textContent: "Total" }), h("span", { textContent: clp(o.total) }))),
+    p.authorizationCode ? dl(["Webpay", `${PAY_TYPES[p.paymentType] || p.paymentType}${p.installments ? ` · ${p.installments} cuotas` : ""} · tarjeta **** ${p.cardNumber} · autorización ${p.authorizationCode}`]) : null);
+
+  if (PAID.includes(o.status)) {
+    const status = h("select", {}, ...PAID.map(s => h("option", { value: s, textContent: STATUS[s], selected: s === o.status })));
+    const tracking = h("input", { value: o.tracking || "", placeholder: "Nº de seguimiento de Chilexpress (opcional)" });
+    const save = h("button", { type: "button", className: "btn", textContent: "Guardar estado", onclick: async () => {
+      save.disabled = true; save.textContent = "Guardando…";
+      try { await api("orderStatus", { id: o.id, status: status.value, tracking: tracking.value }); renderOrders(); }
+      catch (e) { alert(e.message); save.disabled = false; save.textContent = "Guardar estado"; }
+    } });
+    card.append(h("div", { className: "row status-row" }, h("label", {}, "Estado", status), h("label", {}, "Seguimiento", tracking)), save);
+  }
+  return card;
+}
+
+// Comunas con cobertura de Chilexpress (las mismas que ve el cliente al comprar).
+let communeList;
+const communes = () => (communeList ||= fetch("/api/shipping").then(async r => {
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { communeList = null; throw new Error(d.error || `Error ${r.status}`); }
+  return d.communes;
+}));
 
 // ---------- Entrar, guardar, salir ----------
 async function open(pw) {

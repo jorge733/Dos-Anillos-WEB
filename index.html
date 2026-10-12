@@ -42,7 +42,7 @@
     <a href="#contacto">Contacto</a>
     <a href="#sugerencias">Sugerencias</a>
   </nav>
-  <a class="cart-btn wa" target="_blank" rel="noopener">WhatsApp</a>
+  <a class="cart-btn" href="#carrito">Carrito<span id="cartCount" hidden></span></a>
   <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
   <p class="side-foot">Del alma al sonido<br>© 2026 Dos Anillos</p>
 </header>
@@ -143,6 +143,33 @@
     <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
     <button class="btn" type="submit">Enviar</button>
   </form>
+</section>
+
+<!-- CARRITO Y PAGO (no aparecen en el menú) -->
+<section class="section" id="carrito" data-title="Carrito">
+  <div class="section-head">
+    <p class="eyebrow">Carrito</p>
+    <h2>Tu compra</h2>
+  </div>
+  <div class="cart" id="cart"></div>
+  <form class="feedback checkout" id="checkout" hidden>
+    <h3 class="wide">Datos de envío</h3>
+    <label>Nombre y apellido<input name="name" required autocomplete="name"></label>
+    <label>Correo<input name="email" type="email" required autocomplete="email"></label>
+    <label>Teléfono<input name="phone" type="tel" required autocomplete="tel"></label>
+    <label>Región<select id="region" required><option value="">Cargando…</option></select></label>
+    <label>Comuna<select name="county" id="county" required disabled><option value="">Elige la región</option></select></label>
+    <label>Dirección<input name="address" required autocomplete="street-address" placeholder="Calle, número, depto."></label>
+    <label class="wide">Notas para el envío (opcional)<textarea name="notes" rows="2"></textarea></label>
+    <fieldset class="wide ship" id="ship"><legend>Envío por Chilexpress</legend><p class="muted small">Elige tu comuna para calcular el envío.</p></fieldset>
+    <dl class="wide totals" id="totals"></dl>
+    <button class="btn" type="submit" id="payBtn" disabled>Pagar con Webpay</button>
+    <p class="wide small muted">Te llevaremos a Webpay de Transbank para pagar con tarjeta de débito, crédito o prepago.</p>
+  </form>
+</section>
+
+<section class="section" id="pedido" data-title="Tu pedido">
+  <div class="order-result" id="orderResult"></div>
 </section>
 
 <footer class="footer">

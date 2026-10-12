@@ -72,3 +72,28 @@ label{display:grid;gap:.35rem;font-size:.78rem;font-weight:500;color:var(--muted
 .swatch-field{display:flex;align-items:center;gap:.8rem}
 .swatch-field .swatch{flex:1;height:2.6rem;border-radius:4px;border:1px solid var(--line)}
 .swatch-field input{width:3rem;height:2.6rem;padding:.2rem;cursor:pointer}
+
+/* Pedidos */
+select{appearance:auto}
+.orders-head{display:flex;align-items:center;justify-content:space-between}
+.check{display:flex;align-items:center;gap:.5rem;font-weight:400}
+.check input{width:auto}
+.summary{font-size:.95rem;color:var(--charcoal)}
+.order summary{cursor:pointer;list-style:none}
+.order summary::-webkit-details-marker{display:none}
+.order:not([open]) summary{margin:0}
+.order:not([open]){gap:0}
+.order.st-pendiente,.order.st-rechazado,.order.st-anulado{opacity:.7}
+.badge{font-size:.72rem;font-weight:500;padding:.2rem .6rem;border-radius:1rem;background:var(--cream);color:var(--muted);white-space:nowrap}
+.badge.st-pagado{background:#f3e3c7;color:#7a4a12}
+.badge.st-enviado{background:#dfe6f0;color:#2f4a6b}
+.badge.st-entregado{background:#e1ead7;color:var(--sage-dark)}
+.badge.st-rechazado,.badge.st-anulado{background:#f3dcd7;color:var(--error)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;font-size:.9rem}
+.facts dt{color:var(--muted)}
+.facts dd{color:var(--charcoal);overflow-wrap:anywhere}
+.facts a{color:var(--wood)}
+.lines{list-style:none;font-size:.9rem;border-top:1px solid var(--line)}
+.lines li{display:flex;justify-content:space-between;gap:1rem;padding:.45rem 0;border-bottom:1px solid var(--line)}
+.lines .sum{font-weight:600;color:var(--charcoal)}
+.order>.btn{justify-self:start}

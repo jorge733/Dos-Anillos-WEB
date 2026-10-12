@@ -1,3 +1,6 @@
 {
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/*.js": { "includeFiles": "content.js" }
+  }
 }

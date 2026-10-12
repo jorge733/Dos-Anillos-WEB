@@ -3,7 +3,9 @@ window.CONTENT = {
   "general": {
     "whatsapp": "56961772886",
     "phone": "+56 9 6177 2886",
-    "email": "dosanilloschile@gmail.com"
+    "email": "dosanilloschile@gmail.com",
+    "orderEmails": "dosanilloschile@gmail.com",
+    "originCounty": ""
   },
   "hero": {
     "eyebrow": "Lutería artesanal · desde 2024",
@@ -18,8 +20,10 @@ window.CONTENT = {
     "title": "Hechas a mano, pieza por pieza",
     "products": [
       {
+        "id": "flauta-pentatonica",
         "name": "Flauta pentatónica en La 432 Hz",
         "price": 70000,
+        "package": { "weight": 0.3, "length": 40, "width": 10, "height": 6 },
         "imgs": ["img/flautas-horizontal.webp", "img/flautas-vertical.webp", "img/flautas-detalle.webp", "img/flautas-cruzadas-arcoiris.webp"],
         "desc": "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical. Incluye estuche y limpiador hechos por nosotros.",
         "specs": [
@@ -78,7 +82,7 @@ window.CONTENT = {
   "contacto": {
     "eyebrow": "Contacto",
     "title": "Conversemos",
-    "intro": "Todas las compras se realizan por WhatsApp. Escríbenos y te ayudamos a elegir.",
+    "intro": "¿Tienes dudas antes de comprar? Escríbenos por WhatsApp y te ayudamos a elegir.",
     "button": "Escribir por WhatsApp"
   },
   "sugerencias": {

@@ -6,7 +6,7 @@ const C = window.CONTENT;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clp = n => Number(n).toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const waLink = p => `https://wa.me/${C.general.whatsapp}${p ? `?text=${encodeURIComponent(`Hola, me interesa: ${p.name} (${clp(p.price)})`)}` : ""}`;
+const waLink = () => `https://wa.me/${C.general.whatsapp}`;
 const get = path => path.split(".").reduce((o, k) => o?.[k], C) ?? "";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 // Formato mínimo para los textos del panel: **negrita**, párrafos separados por una línea en blanco y listas con "- ".
@@ -56,7 +56,7 @@ function route() {
     on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
   });
   nav.classList.toggle("on-hero", page === sections[0]);
-  document.title = page === sections[0] ? baseTitle : `${$(`#menu a[href="#${page.id}"]`).textContent} · Dos Anillos`;
+  document.title = page === sections[0] ? baseTitle : `${page.dataset.title || $(`#menu a[href="#${page.id}"]`).textContent} · Dos Anillos`;
   scrollTo({ top: 0, behavior: "instant" });
 }
 addEventListener("hashchange", route);
@@ -75,7 +75,7 @@ $("#products").innerHTML = C.flautas.products.map(p => `
       <p class="price">${clp(p.price)}</p>
       <div class="desc">${md(p.desc)}</div>
       <dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>
-      <a class="btn full center" href="${waLink(p)}" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+      <button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>
     </div>
   </article>`).join("");
 
@@ -108,3 +108,167 @@ $("#feedback").addEventListener("submit", async e => {
 // ---------- Animaciones de entrada ----------
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && (e.target.classList.add("in"), io.unobserve(e.target))), { threshold: 0.15 });
 $$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.observe(el); });
+
+// ---------- Carrito ----------
+// Se guarda en este navegador ([{ id, qty }]); los precios reales los calcula el servidor al pagar.
+const product = id => C.flautas.products.find(p => p.id === id);
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)); } catch {}
+const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
+const subtotal = () => cart.reduce((s, i) => s + product(i.id).price * i.qty, 0);
+let shipOptions = [], shipChoice = null, quoteSeq = 0;
+
+function setQty(id, qty) {
+  const item = cart.find(i => i.id === id);
+  if (item) item.qty = Math.max(0, Math.min(20, qty)); else if (qty > 0) cart.push({ id, qty });
+  cart = cart.filter(i => i.qty > 0);
+  saveCart(); renderCart(); requote();
+}
+
+function renderCart() {
+  const n = cart.reduce((s, i) => s + i.qty, 0);
+  $("#cartCount").hidden = !n; $("#cartCount").textContent = n;
+  $("#checkout").hidden = !n;
+  $("#cart").innerHTML = n ? `
+    <ul class="cart-list">${cart.map(i => { const p = product(i.id); return `
+      <li><img src="${esc(p.imgs[0])}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}</p></div>
+        <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno">+</button></div>
+        <strong>${clp(p.price * i.qty)}</strong></li>`; }).join("")}
+    </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#flautas">Ver flautas</a>`;
+  renderTotals();
+}
+
+function renderTotals() {
+  const ship = shipOptions.find(o => o.code === shipChoice);
+  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>${ship ? clp(ship.price) : "—"}</dd>
+    <dt class="total">Total</dt><dd class="total">${clp(subtotal() + (ship ? ship.price : 0))}</dd>`;
+  $("#payBtn").disabled = !ship;
+}
+
+$("#products").addEventListener("click", e => {
+  const b = e.target.closest("[data-add]");
+  if (!b) return;
+  setQty(b.dataset.add, (cart.find(i => i.id === b.dataset.add)?.qty || 0) + 1);
+  location.hash = "#carrito";
+});
+$("#cart").addEventListener("click", e => {
+  const b = e.target.closest(".qty button");
+  if (b) { const id = b.parentElement.dataset.id; setQty(id, cart.find(i => i.id === id).qty + Number(b.dataset.d)); }
+});
+
+// ---------- Comunas y costo de envío (Chilexpress) ----------
+const shipMsg = html => { $("#ship").innerHTML = `<legend>Envío por Chilexpress</legend><p class="muted small">${html}</p>`; };
+const waHelp = `<a class="link" href="${waLink()}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>`;
+let communes = null;
+
+async function loadCommunes() {
+  if (communes) return;
+  communes = [];
+  try {
+    const r = await fetch("/api/shipping");
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    communes = data.communes;
+    // Mientras Webpay esté en el ambiente de pruebas, se avisa que no hay cobros reales.
+    if (data.testMode) $("#checkout").prepend(Object.assign(document.createElement("p"), { className: "wide test-mode", textContent: "Modo de prueba: Webpay está en ambiente de integración y no se hacen cobros reales. Usa la tarjeta de prueba de Transbank." }));
+    const regions = [...new Set(communes.map(c => c.region))];
+    $("#region").innerHTML = `<option value="">Elige tu región</option>` + regions.map(r => `<option>${esc(r)}</option>`).join("");
+  } catch {
+    communes = null;
+    $("#region").innerHTML = `<option value="">No disponible</option>`;
+    shipMsg(`No pudimos cargar las comunas en este momento. Intenta de nuevo en unos minutos o ${waHelp}.`);
+  }
+}
+
+$("#region").onchange = () => {
+  const list = (communes || []).filter(c => c.region === $("#region").value).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  $("#county").innerHTML = `<option value="">Elige tu comuna</option>` + list.map(c => `<option value="${esc(c.code)}">${esc(c.name)}</option>`).join("");
+  $("#county").disabled = !list.length;
+  quoteSeq++; shipOptions = []; shipChoice = null; renderTotals(); shipMsg("Elige tu comuna para calcular el envío.");
+};
+$("#county").onchange = () => requote();
+
+async function requote() {
+  const county = $("#county").value, seq = ++quoteSeq;
+  shipOptions = []; shipChoice = null; renderTotals();
+  if (!county || !cart.length) return;
+  shipMsg("Calculando envío…");
+  try {
+    const r = await fetch("/api/shipping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ county, items: cart }) });
+    const data = await r.json();
+    if (seq !== quoteSeq) return; // llegó una respuesta vieja
+    if (!r.ok) throw new Error(data.error);
+    shipOptions = data.options; shipChoice = shipOptions[0].code;
+    $("#ship").innerHTML = `<legend>Envío por Chilexpress</legend>` + shipOptions.map(o => `
+      <label class="ship-opt"><input type="radio" name="service" value="${esc(o.code)}" ${o.code === shipChoice ? "checked" : ""}><span>${esc(o.name)}</span><strong>${clp(o.price)}</strong></label>`).join("");
+    renderTotals();
+  } catch (e) {
+    if (seq === quoteSeq) shipMsg(`${esc(e.message || "No pudimos calcular el envío.")} Si necesitas ayuda, ${waHelp}.`);
+  }
+}
+$("#ship").addEventListener("change", e => { if (e.target.name === "service") { shipChoice = e.target.value; renderTotals(); } });
+
+// ---------- Pago con Webpay ----------
+$("#checkout").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("#payBtn"), f = e.target;
+  btn.disabled = true; btn.textContent = "Conectando con Webpay…";
+  try {
+    const customer = Object.fromEntries(new FormData(f));
+    delete customer.service;
+    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, customer, service: shipChoice }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    // Webpay pide llegar a su formulario con un POST que lleve el token.
+    const go = Object.assign(document.createElement("form"), { method: "POST", action: data.url });
+    go.append(Object.assign(document.createElement("input"), { type: "hidden", name: "token_ws", value: data.token }));
+    document.body.append(go); go.submit();
+  } catch (err) {
+    toast(err.message || "No se pudo iniciar el pago. Intenta de nuevo.");
+    btn.disabled = false; btn.textContent = "Pagar con Webpay";
+    if (/envío/.test(err.message || "")) requote();
+  }
+});
+
+// Las comunas se piden recién cuando alguien abre el carrito.
+const onCart = () => location.hash === "#carrito" && cart.length && loadCommunes();
+addEventListener("hashchange", onCart);
+renderCart(); onCart();
+
+// ---------- Resultado del pago (vuelta desde Webpay) ----------
+const PAY_TYPES = { VD: "Débito", VP: "Prepago", VN: "Crédito", VC: "Crédito en cuotas", SI: "3 cuotas sin interés", S2: "2 cuotas sin interés", NC: "Cuotas sin interés" };
+async function showOrder() {
+  const q = new URLSearchParams(location.search), id = q.get("pedido");
+  if (!id) return;
+  const box = $("#orderResult");
+  const fail = (title, text) => (box.innerHTML = `<p class="eyebrow">Tu pedido</p><h2>${title}</h2><p class="muted">${text}</p><a class="btn" href="#carrito">Volver al carrito</a>`);
+  if (location.hash !== "#pedido") location.hash = "#pedido";
+  box.innerHTML = `<p class="muted">Cargando tu pedido…</p>`;
+  try {
+    const r = await fetch(`/api/order?id=${encodeURIComponent(id)}&k=${encodeURIComponent(q.get("k") || "")}`);
+    const o = await r.json();
+    if (!r.ok) throw new Error(o.error);
+    if (o.status === "rechazado") return fail("El pago fue rechazado", `Webpay no aprobó el pago del pedido ${esc(o.id)}, así que no se hizo ningún cargo. Puedes intentarlo de nuevo con otra tarjeta.`);
+    if (o.status === "anulado") return fail("El pago no se completó", `Se anuló el pago del pedido ${esc(o.id)} o se acabó el tiempo para pagar. No se hizo ningún cargo.`);
+    if (o.status === "pendiente") return fail("No pudimos confirmar el pago", `Si se hizo un cargo en tu tarjeta, ${waHelp} con el número de pedido ${esc(o.id)} y lo revisamos.`);
+    cart = []; saveCart(); renderCart();
+    const p = o.payment || {};
+    box.innerHTML = `
+      <p class="eyebrow">Pago aprobado</p>
+      <h2>¡Gracias por tu compra, ${esc(o.customer.name.split(" ")[0])}!</h2>
+      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. Te avisaremos cuando despachemos tu pedido.</p>
+      <dl class="voucher">
+        <dt>Número de pedido</dt><dd>${esc(o.id)}</dd>
+        <dt>Monto pagado</dt><dd>${clp(o.total)}</dd>
+        <dt>Fecha</dt><dd>${new Date(p.transactionDate || o.createdAt).toLocaleString("es-CL")}</dd>
+        <dt>Código de autorización</dt><dd>${esc(p.authorizationCode)}</dd>
+        <dt>Tipo de pago</dt><dd>${esc(PAY_TYPES[p.paymentType] || p.paymentType)}</dd>
+        <dt>Cuotas</dt><dd>${p.installments || "Sin cuotas"}</dd>
+        <dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>
+      </dl>
+      <ul class="cart-list">${o.lines.map(l => `<li><div><h3>${l.qty} × ${esc(l.name)}</h3></div><strong>${clp(l.price * l.qty)}</strong></li>`).join("")}
+        <li><div><h3>Envío Chilexpress</h3><p class="muted">${esc(o.shipping.name)}</p></div><strong>${clp(o.shipping.price)}</strong></li></ul>
+      <a class="btn" href="#inicio">Volver al inicio</a>`;
+  } catch { fail("No encontramos tu pedido", `Si pagaste y no ves tu comprobante, ${waHelp} y te ayudamos.`); }
+}
+showOrder();

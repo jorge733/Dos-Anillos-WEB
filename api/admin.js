@@ -7,6 +7,7 @@
 //   GITHUB_REPO     opcional, por defecto jorge733/Dos-Anillos-WEB
 //   GITHUB_BRANCH   opcional, por defecto main
 const crypto = require("crypto");
+const { orders } = require("./_lib");
 
 const REPO = process.env.GITHUB_REPO || "jorge733/Dos-Anillos-WEB";
 const BRANCH = process.env.GITHUB_BRANCH || "main";
@@ -43,6 +44,21 @@ const actions = {
     const { file } = await head();
     const text = Buffer.from((await gh(`/git/blobs/${file}`)).content, "base64").toString("utf8");
     return { sha: file, content: JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)) };
+  },
+
+  // Pedidos de la tienda (los más nuevos primero).
+  async orders() {
+    return { orders: (await orders.list()).map(({ key, token, ...o }) => o) };
+  },
+
+  // Cambia el estado de un pedido pagado (pagado → enviado → entregado) y anota el número de seguimiento.
+  async orderStatus({ id, status, tracking = "" }) {
+    if (!["pagado", "enviado", "entregado"].includes(status)) throw fail(400, "Estado inválido.");
+    const o = await orders.get(String(id));
+    if (!o || !["pagado", "enviado", "entregado"].includes(o.status)) throw fail(404, "Pedido no encontrado.");
+    Object.assign(o, { status, tracking: String(tracking).trim().slice(0, 60) });
+    await orders.save(o);
+    return { ok: true };
   },
 
   // Sube una foto como blob suelto (no crea commit); queda incluida en el próximo guardado.
