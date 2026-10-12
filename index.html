@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dos Anillos · Instrumentos de madera artesanales</title>
-<meta name="description" content="Flautas pentatónicas, kanteles y piezas de madera hechas a mano. Del alma al sonido.">
+<meta name="description" content="Flautas pentatónicas de madera hechas a mano. Del alma al sonido.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
   <a href="#inicio" class="logo" aria-label="Dos Anillos, inicio"><span class="logo-img"></span></a>
   <nav id="menu">
     <a href="#inicio">Inicio</a>
-    <a href="#catalogo">Catálogo</a>
+    <a href="#flautas">Flautas</a>
     <a href="#maderas">Maderas</a>
     <a href="#cuidado">Cuidado</a>
     <a href="#historia">Historia</a>
@@ -43,17 +43,17 @@
     <p class="eyebrow">Lutería artesanal · desde 2024</p>
     <h1>Del alma<br><em>al sonido</em></h1>
     <p class="lead">Instrumentos y piezas de madera hechos a mano, veta a veta.</p>
-    <a class="btn" href="#catalogo">Ver catálogo</a>
+    <a class="btn" href="#flautas">Ver flautas</a>
   </div>
 </section>
 
-<!-- CATÁLOGO -->
-<section class="section" id="catalogo">
+<!-- FLAUTAS -->
+<section class="section" id="flautas">
   <div class="section-head">
-    <p class="eyebrow">Catálogo</p>
-    <h2>Hecho a mano, pieza por pieza</h2>
+    <p class="eyebrow">Flautas</p>
+    <h2>Hechas a mano, pieza por pieza</h2>
   </div>
-  <div id="catalogList"></div>
+  <div id="products"></div>
 </section>
 
 <!-- MADERAS -->
@@ -184,33 +184,11 @@
   </form>
 </section>
 
-</main>
+<footer class="footer">
+  <p>Página desarrollada por <a href="https://benedettowebs.vercel.app/" target="_blank" rel="noopener">BenedettoWebs</a></p>
+</footer>
 
-<!-- MODAL PRODUCTO -->
-<div class="modal" id="modal" aria-hidden="true">
-  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <button class="close" id="modalClose" aria-label="Cerrar">×</button>
-    <div class="modal-grid">
-      <div class="gallery">
-        <div class="zoom" id="zoom"><img id="mainImg" alt=""></div>
-        <div class="thumbs" id="thumbs"></div>
-        <p class="hint">Pasa el cursor sobre la imagen para ver la veta en detalle</p>
-      </div>
-      <div class="info">
-        <p class="eyebrow" id="mCat"></p>
-        <h3 id="mTitle"></h3>
-        <p class="price" id="mPrice"></p>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="desc">Descripción</button>
-          <button class="tab" data-tab="woods">Maderas</button>
-        </div>
-        <div class="tab-panel" data-panel="desc" id="mDesc"></div>
-        <div class="tab-panel" data-panel="woods" hidden><dl class="specs" id="mSpecs"></dl></div>
-        <a class="btn full center" id="buyBtn" target="_blank" rel="noopener">Comprar por WhatsApp</a>
-      </div>
-    </div>
-  </div>
-</div>
+</main>
 
 <div class="toast" id="toast" role="status"></div>
 
