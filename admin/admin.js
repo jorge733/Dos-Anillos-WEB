@@ -62,7 +62,11 @@ const TABS = [
   ] },
   { key: "contacto", title: "Contacto", fields: [...head,
     { k: "intro", label: "Texto", type: "textarea" },
-    { k: "button", label: "Texto del botón" },
+    { k: "button", label: "Texto del botón de WhatsApp" },
+    { k: "emailButton", label: "Texto del botón de correo" },
+    { k: "others", label: "Otros contactos (WhatsApp)", type: "list", noun: "contacto", name: o => o.name, row: true,
+      blank: () => ({ name: "", whatsapp: "" }),
+      fields: [{ k: "name", label: "Nombre" }, { k: "whatsapp", label: "WhatsApp (ej.: 56912345678)", hint: "Si lo dejas vacío, no se muestra." }] },
   ] },
   { key: "sugerencias", title: "Sugerencias", fields: [...head, { k: "intro", label: "Texto", type: "textarea" }] },
 ];

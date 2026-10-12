@@ -275,3 +275,11 @@ html{scroll-behavior:auto}
   .side-closed .side-toggle:hover{background:var(--bone)}
   .side-closed .side-toggle i{transform:translateX(-1.5px) rotate(225deg)}
 }
+
+/* Contacto: botones principales + contactos secundarios */
+.contact-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem}
+.btn.ghost{background:transparent;color:var(--charcoal);border:1px solid var(--charcoal);padding:calc(1rem - 1px) calc(2.2rem - 1px)}
+.btn.ghost:hover{background:var(--charcoal);color:var(--paper)}
+.contact-others{margin-top:1.5rem}
+.contact-others:empty{display:none}
+.contact-others .btn{padding:.7rem 1.6rem;font-size:.75rem}

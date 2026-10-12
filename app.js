@@ -24,6 +24,7 @@ $$("[data-md]").forEach(el => (el.innerHTML = inline(get(el.dataset.md))));
 $$("a.wa").forEach(a => (a.href = waLink()));
 $("#heroImg").src = C.hero.image;
 $("#teamImg").src = C.equipo.image;
+$("#mailBtn").href = `mailto:${C.general.email}`;
 
 // ---------- Nav ----------
 const nav = $("#nav");
@@ -87,6 +88,11 @@ $("#care").innerHTML = C.cuidado.steps.map((s, i) => `
   <li><span>${i + 1}</span><div><h3>${esc(s.title)}</h3>${md(s.text)}</div></li>`).join("");
 $("#story").innerHTML = C.historia.blocks.map(b => `<article><h3>${esc(b.title)}</h3>${md(b.text)}</article>`).join("");
 $("#makers").innerHTML = C.equipo.makers.map(m => `<li>${esc(m.name)}</li>`).join("");
+
+// ---------- Contactos secundarios (solo los que tienen número) ----------
+const others = (C.contacto.others || []).filter(o => o.whatsapp);
+$("#others").innerHTML = others.length ? `<p class="eyebrow">También puedes escribirle a</p><div class="contact-btns">${others.map(o => `
+  <a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/${esc(o.whatsapp.replace(/\D/g, ""))}">${esc(o.name)}</a>`).join("")}</div>` : "";
 
 // ---------- Sugerencias y reclamos ----------
 // FormSubmit reenvía el formulario al correo de contacto (el primer envío pide activar el servicio desde ese correo).

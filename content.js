@@ -79,7 +79,12 @@ window.CONTENT = {
     "eyebrow": "Contacto",
     "title": "Conversemos",
     "intro": "Todas las compras se realizan por WhatsApp. Escríbenos y te ayudamos a elegir.",
-    "button": "Escribir por WhatsApp"
+    "button": "Escribir por WhatsApp",
+    "emailButton": "Escribir por correo",
+    "others": [
+      { "name": "Amador Orellana", "whatsapp": "56988929164" },
+      { "name": "Vicente Paz", "whatsapp": "56920885308" }
+    ]
   },
   "sugerencias": {
     "eyebrow": "Sugerencias y reclamos",
