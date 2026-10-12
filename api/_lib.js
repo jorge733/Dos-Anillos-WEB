@@ -38,7 +38,7 @@ function content() {
 function priceCart(items, c = content()) {
   if (!Array.isArray(items) || !items.length || items.length > 20) throw fail(400, "El carrito está vacío.");
   const lines = items.map(({ id, qty }) => {
-    const p = c.flautas.products.find(p => p.id === id);
+    const p = c.productos.products.find(p => p.id === id);
     const n = Math.floor(Number(qty));
     if (!p) throw fail(400, "Un producto del carrito ya no está disponible. Revisa el carrito.");
     if (!(n >= 1 && n <= 20)) throw fail(400, "Cantidad inválida.");

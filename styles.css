@@ -135,7 +135,7 @@ a.btn.full{display:block}
 .workshop img{width:100%;max-height:520px;object-fit:cover}
 .workshop figcaption{font-size:.78rem;color:var(--muted);margin-top:.6rem}
 
-/* Flautas: todas las fotos a la vista + ficha */
+/* Productos: todas las fotos a la vista + ficha */
 .product{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:3.5rem;align-items:start}
 .photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
 .photos figure{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--bone);margin:0}
@@ -315,3 +315,22 @@ html{scroll-behavior:auto}
   .totals{max-width:none}
 }
 .test-mode{background:#f3e3c7;color:#7a4a12;padding:.8rem 1rem;font-size:.88rem}
+
+/* Correo arriba a la derecha en el inicio */
+.hero-mail{position:absolute;top:2rem;right:5vw;z-index:2;color:var(--paper);font-size:.85rem;letter-spacing:.06em;padding:.5rem 1.1rem;border:1px solid rgba(250,247,241,.5);border-radius:40px;backdrop-filter:blur(6px);background:rgba(0,0,0,.15);transition:background .3s,color .3s}
+.hero-mail:hover{background:var(--paper);color:var(--charcoal)}
+@media (max-width:900px){.hero-mail{top:5.2rem;right:16px;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* Contacto: botones principales + contactos secundarios */
+.contact-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem}
+.btn.ghost{background:transparent;color:var(--charcoal);border:1px solid var(--charcoal);padding:calc(1rem - 1px) calc(2.2rem - 1px)}
+.btn.ghost:hover{background:var(--charcoal);color:var(--paper)}
+.contact-others{margin-top:1.5rem}
+.contact-others:empty{display:none}
+.contact-others .btn{padding:.7rem 1.6rem;font-size:.75rem}
+
+/* Quiénes somos: varias fotos del taller */
+.team-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+.team-photos img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.team-photos img:first-child{grid-column:1/-1;aspect-ratio:auto;max-height:520px}
+.team-photos img:only-child{max-height:520px}

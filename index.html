@@ -34,7 +34,7 @@
   <a href="#inicio" class="logo" aria-label="Dos Anillos, inicio"><span class="logo-img"></span></a>
   <nav id="menu">
     <a href="#inicio">Inicio</a>
-    <a href="#flautas">Flautas</a>
+    <a href="#productos">Productos</a>
     <a href="#maderas">Maderas</a>
     <a href="#cuidado">Cuidado</a>
     <a href="#historia">Historia</a>
@@ -54,19 +54,19 @@
 <section class="hero" id="inicio">
   <img class="hero-video" id="heroImg" alt="Flautas pentatónicas de madera Dos Anillos" fetchpriority="high">
   <div class="hero-shade"></div>
+  <a class="hero-mail" id="heroMail"></a>
   <div class="hero-content">
     <p class="eyebrow" data-t="hero.eyebrow"></p>
     <h1><span data-t="hero.title"></span><br><em data-t="hero.titleEm"></em></h1>
     <p class="lead" data-t="hero.lead"></p>
-    <a class="btn" href="#flautas" data-t="hero.button"></a>
   </div>
 </section>
 
-<!-- FLAUTAS -->
-<section class="section" id="flautas">
+<!-- PRODUCTOS -->
+<section class="section" id="productos">
   <div class="section-head">
-    <p class="eyebrow" data-t="flautas.eyebrow"></p>
-    <h2 data-t="flautas.title"></h2>
+    <p class="eyebrow" data-t="productos.eyebrow"></p>
+    <h2 data-t="productos.title"></h2>
   </div>
   <div id="products"></div>
 </section>
@@ -106,7 +106,7 @@
     <h2 data-t="equipo.title"></h2>
   </div>
   <div class="team">
-    <figure class="workshop"><img loading="lazy" id="teamImg" alt="Taller Dos Anillos"><figcaption data-t="equipo.caption"></figcaption></figure>
+    <figure class="workshop"><div class="team-photos" id="teamPhotos"></div><figcaption data-t="equipo.caption"></figcaption></figure>
     <div>
       <h3 class="team-title" data-t="equipo.teamTitle"></h3>
       <ul class="makers" id="makers"></ul>
@@ -119,8 +119,12 @@
   <p class="eyebrow" data-t="contacto.eyebrow"></p>
   <h2 data-t="contacto.title"></h2>
   <p class="muted" data-md="contacto.intro"></p>
-  <a class="btn wa" target="_blank" rel="noopener" data-t="contacto.button"></a>
+  <div class="contact-btns">
+    <a class="btn wa" target="_blank" rel="noopener" data-t="contacto.button"></a>
+    <a class="btn ghost" id="mailBtn" data-t="contacto.emailButton"></a>
+  </div>
   <p class="phone" data-t="general.phone"></p>
+  <div class="contact-others" id="others"></div>
 </section>
 
 <!-- SUGERENCIAS Y RECLAMOS -->

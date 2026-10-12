@@ -23,7 +23,9 @@ $$("[data-t]").forEach(el => (el.textContent = get(el.dataset.t)));
 $$("[data-md]").forEach(el => (el.innerHTML = inline(get(el.dataset.md))));
 $$("a.wa").forEach(a => (a.href = waLink()));
 $("#heroImg").src = C.hero.image;
-$("#teamImg").src = C.equipo.image;
+const mailto = `mailto:${C.general.email}`;
+Object.assign($("#heroMail"), { href: mailto, textContent: C.general.email });
+$("#mailBtn").href = mailto;
 
 // ---------- Nav ----------
 const nav = $("#nav");
@@ -62,9 +64,9 @@ function route() {
 addEventListener("hashchange", route);
 route();
 
-// ---------- Flautas ----------
-// Todas las fotos de cada flauta a la vista, sin carrusel.
-$("#products").innerHTML = C.flautas.products.map(p => `
+// ---------- Productos ----------
+// Todas las fotos de cada producto a la vista, sin carrusel.
+$("#products").innerHTML = C.productos.products.map(p => `
   <article class="product">
     <div class="photos">${p.imgs.map((src, i) => `
       <figure><div class="photo-bg" style="background-image:url('${esc(src)}')"></div>
@@ -87,6 +89,13 @@ $("#care").innerHTML = C.cuidado.steps.map((s, i) => `
   <li><span>${i + 1}</span><div><h3>${esc(s.title)}</h3>${md(s.text)}</div></li>`).join("");
 $("#story").innerHTML = C.historia.blocks.map(b => `<article><h3>${esc(b.title)}</h3>${md(b.text)}</article>`).join("");
 $("#makers").innerHTML = C.equipo.makers.map(m => `<li>${esc(m.name)}</li>`).join("");
+// Fotos del taller: la primera grande y el resto en una grilla debajo.
+$("#teamPhotos").innerHTML = C.equipo.images.map((src, i) => `<img loading="lazy" src="${esc(src)}" alt="Taller Dos Anillos — foto ${i + 1}">`).join("");
+
+// ---------- Contactos secundarios (solo los que tienen número) ----------
+const others = (C.contacto.others || []).filter(o => o.whatsapp);
+$("#others").innerHTML = others.length ? `<p class="eyebrow">También puedes escribirle a</p><div class="contact-btns">${others.map(o => `
+  <a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/${esc(o.whatsapp.replace(/\D/g, ""))}">${esc(o.name)}</a>`).join("")}</div>` : "";
 
 // ---------- Sugerencias y reclamos ----------
 // FormSubmit reenvía el formulario al correo de contacto (el primer envío pide activar el servicio desde ese correo).
@@ -111,7 +120,7 @@ $$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.obse
 
 // ---------- Carrito ----------
 // Se guarda en este navegador ([{ id, qty }]); los precios reales los calcula el servidor al pagar.
-const product = id => C.flautas.products.find(p => p.id === id);
+const product = id => C.productos.products.find(p => p.id === id);
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)); } catch {}
 const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
@@ -134,7 +143,7 @@ function renderCart() {
       <li><img src="${esc(p.imgs[0])}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}</p></div>
         <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno">+</button></div>
         <strong>${clp(p.price * i.qty)}</strong></li>`; }).join("")}
-    </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#flautas">Ver flautas</a>`;
+    </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#productos">Ver productos</a>`;
   renderTotals();
 }
 

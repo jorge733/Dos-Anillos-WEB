@@ -12,11 +12,10 @@ window.CONTENT = {
     "title": "Del alma",
     "titleEm": "al sonido",
     "lead": "Instrumentos y piezas de madera hechos a mano, veta a veta.",
-    "button": "Ver flautas",
     "image": "img/flautas-detalle.webp"
   },
-  "flautas": {
-    "eyebrow": "Flautas",
+  "productos": {
+    "eyebrow": "Productos",
     "title": "Hechas a mano, pieza por pieza",
     "products": [
       {
@@ -70,7 +69,7 @@ window.CONTENT = {
   "equipo": {
     "eyebrow": "Quiénes somos",
     "title": "Las manos detrás de cada pieza",
-    "image": "img/taller-torno.webp",
+    "images": ["img/taller-torno.webp"],
     "caption": "Nuestro taller",
     "teamTitle": "Lutieres",
     "makers": [
@@ -83,7 +82,12 @@ window.CONTENT = {
     "eyebrow": "Contacto",
     "title": "Conversemos",
     "intro": "¿Tienes dudas antes de comprar? Escríbenos por WhatsApp y te ayudamos a elegir.",
-    "button": "Escribir por WhatsApp"
+    "button": "Escribir por WhatsApp",
+    "emailButton": "Escribir por correo",
+    "others": [
+      { "name": "Amador Orellana", "whatsapp": "56988929164" },
+      { "name": "Vicente Paz", "whatsapp": "56920885308" }
+    ]
   },
   "sugerencias": {
     "eyebrow": "Sugerencias y reclamos",

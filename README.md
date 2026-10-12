@@ -19,7 +19,7 @@ Configuración (una sola vez):
 
 ## Tienda: carrito, Webpay y envíos con Chilexpress
 
-El cliente arma su carrito, elige región y comuna, y Chilexpress cotiza el envío según el peso y las medidas del paquete (se configuran por flauta en `/admin`). Paga con Webpay Plus. Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
+El cliente arma su carrito, elige región y comuna, y Chilexpress cotiza el envío según el peso y las medidas del paquete (se configuran por producto en `/admin`). Paga con Webpay Plus. Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
 
 Funciones: `api/shipping.js` (comunas y cotización), `api/checkout.js` (crea el pedido y el pago), `api/webpay.js` (vuelta desde Webpay), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios y el envío siempre se recalculan en el servidor.
 
