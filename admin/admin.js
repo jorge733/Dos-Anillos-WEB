@@ -53,7 +53,6 @@ const TABS = [
       blank: () => ({ title: "Nuevo bloque", text: "" }),
       fields: [{ k: "title", label: "Título" }, { k: "text", label: "Texto", type: "textarea", hint: MD, rows: 9 }] },
   ] },
-  { key: "envios", title: "Envíos", fields: [...head, { k: "intro", label: "Texto", type: "textarea" }] },
   { key: "equipo", title: "Quiénes somos", fields: [...head,
     { k: "image", label: "Foto del taller", type: "image" },
     { k: "caption", label: "Pie de foto" },

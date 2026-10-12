@@ -63,11 +63,6 @@ window.CONTENT = {
       { "title": "Nuestra misión", "text": "Tenemos como objetivo que nuestras máquinas y herramientas estén creadas por nosotros mismos, como el torno que nos permite crear los cilindros y accesorios de la flauta, la lijadora con la que hacemos las boquillas o nuestra sierra huincha. Queremos que nuestros productos se sientan con la mayor calidad posible y con cariño en ellos: cada flauta pentatónica incluye un estuche y un limpiador hechos por nosotros.\n\nEn un futuro esperamos crear nuestros propios instrumentos de cuerda, como kanteles (ya tenemos algunos prototipos), u otras flautas como la flauta dulce. Queremos llegar a toda la comunidad de Chile y que todos los colegios que tengan primero básico puedan tener nuestras flautas." }
     ]
   },
-  "envios": {
-    "eyebrow": "Envíos",
-    "title": "Enviamos a todo Chile",
-    "intro": "Cada pieza se embala con cuidado para que llegue en perfecto estado. Coordinamos el envío y sus costos contigo directamente por WhatsApp al momento de la compra."
-  },
   "equipo": {
     "eyebrow": "Quiénes somos",
     "title": "Las manos detrás de cada pieza",
