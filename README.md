@@ -6,7 +6,7 @@ Todos los textos, precios, fotos y datos de contacto están en `content.js`.
 
 ## Panel de edición (`/admin`)
 
-En `https://webdosanillos.vercel.app/admin/` el dueño del sitio entra con una contraseña y edita el contenido sin tocar código. Al apretar **Guardar y publicar**, la función `api/admin.js` guarda `content.js` (y las fotos nuevas, en `img/`) como un commit en GitHub, y Vercel vuelve a publicar el sitio en 1 o 2 minutos.
+En `https://dosanillos.cl/admin` el dueño del sitio entra con una contraseña y edita el contenido sin tocar código. Al apretar **Guardar y publicar**, la función `api/admin.js` guarda `content.js` (y las fotos nuevas, en `img/`) como un commit en GitHub, y Vercel vuelve a publicar el sitio en 1 o 2 minutos.
 
 Configuración (una sola vez):
 

@@ -90,7 +90,7 @@ function setStatus(msg, kind = "") { const s = $("#status"); s.textContent = msg
 function touch() { dirty = true; $("#save").disabled = false; setStatus("Cambios sin guardar"); }
 
 // ---------- Fotos ----------
-const srcOf = path => uploads[path]?.preview || `../${path}`;
+const srcOf = path => uploads[path]?.preview || `/${path}`;
 
 // Achica la foto en el navegador (máx. 1800 px, WebP) para que cargue rápido en el sitio.
 async function compress(file) {
