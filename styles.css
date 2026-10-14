@@ -228,6 +228,8 @@ html{scroll-behavior:auto}
 #main>.section{min-height:100vh;min-height:100dvh}
 .contact{justify-content:center}
 .hero .btn{margin-top:.4rem}
+.hero .lead{margin-bottom:1.2rem}
+.hero-intro{max-width:520px;margin-bottom:2.4rem;line-height:1.7;opacity:.82}
 .side-foot{display:none}
 .nav nav a.active{font-weight:500}
 

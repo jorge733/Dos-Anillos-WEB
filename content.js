@@ -11,6 +11,8 @@ window.CONTENT = {
     "title": "Del alma",
     "titleEm": "al sonido",
     "lead": "Instrumentos y piezas de madera hechos a mano, veta a veta.",
+    "intro": "Hacemos flautas pentatónicas afinadas en La 432 Hz en nuestro taller en Chile. Cada una se tornea y se termina a mano, y viene con su estuche y su limpiador.",
+    "button": "Ver catálogo",
     "image": "img/subida-mv7gihvk-nsqm.webp"
   },
   "productos": {

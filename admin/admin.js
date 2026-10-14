@@ -18,6 +18,8 @@ const TABS = [
     { k: "title", label: "Título (primera línea)" },
     { k: "titleEm", label: "Título (segunda línea, en cursiva)" },
     { k: "lead", label: "Bajada", type: "textarea" },
+    { k: "intro", label: "Introducción", type: "textarea", hint: "Párrafo corto bajo la bajada. Usa **negrita** para destacar." },
+    { k: "button", label: "Texto del botón al catálogo" },
     { k: "image", label: "Foto de fondo", type: "image" },
   ] },
   { key: "productos", title: "Catálogo", fields: [...head,
