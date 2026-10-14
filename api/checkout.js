@@ -32,7 +32,7 @@ module.exports = handle(async (req, res) => {
   const pref = await mercadopago("POST", "/checkout/preferences", {
     items: [
       ...order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
-      { id: "envio", title: `Envío Chilexpress (${shipping.name})`, quantity: 1, unit_price: shipping.price, currency_id: "CLP" },
+      ...(shipping.price > 0 ? [{ id: "envio", title: `Envío Chilexpress (${shipping.name})`, quantity: 1, unit_price: shipping.price, currency_id: "CLP" }] : []),
     ],
     payer: { name: customer.name, email: customer.email },
     external_reference: order.id,

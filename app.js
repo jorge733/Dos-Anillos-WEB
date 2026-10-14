@@ -147,9 +147,12 @@ function renderCart() {
   renderTotals();
 }
 
+// Si Chilexpress no puede cotizar, el envío queda por coordinar con el vendedor y se paga aparte.
+const shipPrice = s => s.code === "coordinar" ? "Por coordinar" : clp(s.price);
+
 function renderTotals() {
   const ship = shipOptions.find(o => o.code === shipChoice);
-  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>${ship ? clp(ship.price) : "—"}</dd>
+  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>${ship ? shipPrice(ship) : "—"}</dd>
     <dt class="total">Total</dt><dd class="total">${clp(subtotal() + (ship ? ship.price : 0))}</dd>`;
   $("#payBtn").disabled = !ship;
 }
@@ -209,7 +212,8 @@ async function requote() {
     if (!r.ok) throw new Error(data.error);
     shipOptions = data.options; shipChoice = shipOptions[0].code;
     $("#ship").innerHTML = `<legend>Envío por Chilexpress</legend>` + shipOptions.map(o => `
-      <label class="ship-opt"><input type="radio" name="service" value="${esc(o.code)}" ${o.code === shipChoice ? "checked" : ""}><span>${esc(o.name)}</span><strong>${clp(o.price)}</strong></label>`).join("");
+      <label class="ship-opt"><input type="radio" name="service" value="${esc(o.code)}" ${o.code === shipChoice ? "checked" : ""}><span>${esc(o.name)}</span><strong>${shipPrice(o)}</strong></label>`).join("")
+      + (shipOptions.some(o => o.code === "coordinar") ? `<p class="muted small">No pudimos calcular el envío automáticamente. Pagas solo los productos y te escribimos para acordar el costo del envío, que se paga aparte.</p>` : "");
     renderTotals();
   } catch (e) {
     if (seq === quoteSeq) shipMsg(`${esc(e.message || "No pudimos calcular el envío.")} Si necesitas ayuda, ${waHelp}.`);
@@ -268,7 +272,7 @@ async function showOrder() {
     box.innerHTML = `
       <p class="eyebrow">Pago aprobado</p>
       <h2>¡Gracias por tu compra, ${esc(o.customer.name.split(" ")[0])}!</h2>
-      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. Te avisaremos cuando despachemos tu pedido.</p>
+      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. ${o.shipping.code === "coordinar" ? "Te escribiremos para acordar el costo del envío, que se paga aparte." : "Te avisaremos cuando despachemos tu pedido."}</p>
       <dl class="voucher">
         <dt>Número de pedido</dt><dd>${esc(o.id)}</dd>
         <dt>Monto pagado</dt><dd>${clp(o.total)}</dd>
@@ -279,7 +283,7 @@ async function showOrder() {
         ${p.cardNumber ? `<dt>Cuotas</dt><dd>${p.installments > 1 ? p.installments : "Sin cuotas"}</dd><dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>` : ""}
       </dl>
       <ul class="cart-list">${o.lines.map(l => `<li><div><h3>${l.qty} × ${esc(l.name)}</h3></div><strong>${clp(l.price * l.qty)}</strong></li>`).join("")}
-        <li><div><h3>Envío Chilexpress</h3><p class="muted">${esc(o.shipping.name)}</p></div><strong>${clp(o.shipping.price)}</strong></li></ul>
+        <li><div><h3>Envío Chilexpress</h3><p class="muted">${esc(o.shipping.name)}</p></div><strong>${shipPrice(o.shipping)}</strong></li></ul>
       <a class="btn" href="#inicio">Volver al inicio</a>`;
   } catch { fail("No encontramos tu pedido", `Si pagaste y no ves tu comprobante, ${waHelp} y te ayudamos.`); }
 }

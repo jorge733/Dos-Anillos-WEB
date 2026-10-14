@@ -124,18 +124,16 @@ function packageOf(lines) {
 }
 
 // Opciones de envío de Chilexpress para un carrito y una comuna de destino.
-// Si Chilexpress no puede cotizar (llave sin habilitar, caída, etc.), se usa el precio fijo por zona de /admin.
+// Si Chilexpress no puede cotizar (llave sin habilitar, caída, etc.), el envío queda por coordinar con el vendedor:
+// el cliente paga solo los productos y el costo del envío se acuerda y se paga aparte.
 async function quote(county, cart, c = content()) {
   if (!c.general.originCounty) throw fail(500, "Falta elegir la comuna de origen de los envíos en /admin.");
   if (!county) throw fail(400, "Elige tu comuna.");
   try { return await chilexpressQuote(county, cart, c); }
   catch (e) {
     if (e.status === 422) throw e; // Chilexpress respondió, pero no llega a esa comuna
-    const place = (await communes()).find(p => p.code === county);
-    const price = Number(place && /metropolitana/i.test(place.region) ? c.general.shipRM : c.general.shipOther);
-    if (!place || !(price > 0)) throw e;
-    console.warn("Envío con precio fijo:", e.message);
-    return [{ code: "fijo", name: "Envío por Chilexpress", price: Math.round(price) }];
+    console.warn("Envío por coordinar:", e.message);
+    return [{ code: "coordinar", name: "Por coordinar con el vendedor", price: 0 }];
   }
 }
 
@@ -210,6 +208,7 @@ async function mail(to, subject, html, replyTo) {
 }
 
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
+const shipPrice = s => s.code === "coordinar" ? "Por coordinar" : clp(s.price);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 function orderHtml(o, intro) {
@@ -221,7 +220,7 @@ function orderHtml(o, intro) {
     <p><strong>Pedido ${esc(o.id)}</strong> · ${new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago" })}</p>
     <table style="width:100%;border-collapse:collapse;border-top:1px solid #d9d0bf;border-bottom:1px solid #d9d0bf">
       ${o.lines.map(l => row(`${l.qty} × ${esc(l.name)}`, clp(l.price * l.qty))).join("")}
-      ${row(`Envío Chilexpress (${esc(o.shipping.name)})`, clp(o.shipping.price))}
+      ${row(`Envío Chilexpress (${esc(o.shipping.name)})`, shipPrice(o.shipping))}
       ${row("Total pagado", clp(o.total), true)}
     </table>
     <p style="margin-top:18px"><strong>Envío a:</strong><br>${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.countyName)}, ${esc(c.region)}<br>${esc(c.phone)} · ${esc(c.email)}${c.notes ? `<br><em>${esc(c.notes)}</em>` : ""}</p>
@@ -233,9 +232,10 @@ function orderHtml(o, intro) {
 async function notifyPaid(o) {
   const c = content();
   const owners = String(c.general.orderEmails || c.general.email).split(/[,;\s]+/).filter(Boolean);
+  const coord = o.shipping.code === "coordinar";
   await Promise.all([
-    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te avisaremos cuando despachemos tu pedido.`), c.general.email),
-    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, "Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente."), o.customer.email),
+    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! ${coord ? "Te escribiremos para acordar el costo del envío, que se paga aparte." : "Te avisaremos cuando despachemos tu pedido."}`), c.general.email),
+    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, `Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente.${coord ? " <strong>El envío quedó por coordinar: escríbele al cliente para acordar el costo.</strong>" : ""}`), o.customer.email),
   ]);
 }
 

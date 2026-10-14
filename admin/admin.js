@@ -13,8 +13,6 @@ const TABS = [
     { k: "email", label: "Correo de contacto", hint: "Se muestra en Inicio y en Contacto, y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
     { k: "orderEmails", label: "Correos que reciben el aviso de cada venta", hint: "Puedes poner varios separados por comas." },
     { k: "originCounty", label: "Comuna desde donde se despachan los envíos", type: "commune", hint: "Chilexpress calcula el costo del envío desde esta comuna." },
-    { k: "shipRM", label: "Envío fijo a la Región Metropolitana (CLP)", type: "number", step: 500, hint: "Se cobra solo si Chilexpress no puede calcular el envío. En 0, no se usa." },
-    { k: "shipOther", label: "Envío fijo al resto del país (CLP)", type: "number", step: 500, hint: "Se cobra solo si Chilexpress no puede calcular el envío. En 0, no se usa." },
   ] },
   { key: "hero", title: "Inicio", fields: [
     { k: "eyebrow", label: "Etiqueta pequeña" },
@@ -270,7 +268,7 @@ function orderCard(o) {
        ["Notas", c.notes]),
     h("ul", { className: "lines" },
       ...o.lines.map(l => h("li", {}, h("span", { textContent: `${l.qty} × ${l.name}` }), h("span", { textContent: clp(l.price * l.qty) }))),
-      h("li", {}, h("span", { textContent: `Envío Chilexpress · ${o.shipping.name}` }), h("span", { textContent: clp(o.shipping.price) })),
+      h("li", {}, h("span", { textContent: `Envío Chilexpress · ${o.shipping.name}` }), h("span", { textContent: o.shipping.code === "coordinar" ? "Por coordinar con el cliente" : clp(o.shipping.price) })),
       h("li", { className: "sum" }, h("span", { textContent: "Total" }), h("span", { textContent: clp(o.total) }))),
     p.operation ? dl(payText(p)) : null);
 
