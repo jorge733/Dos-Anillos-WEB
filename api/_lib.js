@@ -125,30 +125,102 @@ async function mail(to, subject, html, replyTo) {
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-function orderHtml(o, intro) {
-  const row = (a, b, bold) => `<tr><td style="padding:6px 0;color:#7a7366">${a}</td><td style="padding:6px 0;text-align:right;${bold ? "font-weight:600;color:#2b2a27" : ""}">${b}</td></tr>`;
-  const c = o.customer;
-  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3d3a34">
-    <h2 style="font-family:Georgia,serif;font-weight:normal;color:#2b2a27">Dos Anillos</h2>
-    <p>${intro}</p>
-    <p><strong>Pedido ${esc(o.id)}</strong> · ${new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago" })}</p>
-    <table style="width:100%;border-collapse:collapse;border-top:1px solid #d9d0bf;border-bottom:1px solid #d9d0bf">
-      ${o.lines.map(l => row(`${l.qty} × ${esc(l.name)}`, clp(l.price * l.qty))).join("")}
-      ${row("Envío", "Por coordinar")}
-      ${row("Total pagado", clp(o.total), true)}
+// ---------- Diseño de los correos ----------
+// Correos con tablas y estilos en línea: es lo único que Gmail, Outlook y Apple Mail muestran igual.
+// Colores y letras del sitio (styles.css). Las imágenes se cargan desde el sitio publicado.
+const SITE = "https://dosanillos.cl";
+const K = { cream: "#f4efe6", bone: "#ebe4d7", paper: "#faf7f1", charcoal: "#2b2a27", ink: "#3d3a34", muted: "#7a7366", sage: "#5c6a4c", wood: "#8a5a3b", line: "#d9d0bf" };
+const SERIF = "'Cormorant Garamond',Georgia,'Times New Roman',serif", SANS = "Helvetica,Arial,sans-serif";
+const absUrl = src => /^https?:/.test(src) ? src : `${SITE}/${String(src).replace(/^\//, "")}`;
+// Número de WhatsApp a partir de lo que escribió el cliente (9 1234 5678 → 56912345678).
+const waNumber = phone => { const d = String(phone).replace(/\D/g, ""); return d.length === 9 && d[0] === "9" ? "56" + d : d; };
+const waUrl = (phone, text) => `https://wa.me/${waNumber(phone)}?text=${encodeURIComponent(text)}`;
+
+const btn = (href, text, dark = true) => `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 10px 0;padding:13px 24px;background:${dark ? K.charcoal : "transparent"};border:1px solid ${K.charcoal};color:${dark ? K.paper : K.charcoal};font-family:${SANS};font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none">${text}</a>`;
+const label = text => `<p style="margin:0 0 10px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${K.muted}">${text}</p>`;
+
+function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "" }) {
+  const c = o.customer, products = content().productos.products;
+  const when = new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "short" });
+  const line = l => {
+    const img = products.find(p => p.id === l.id)?.imgs?.[0];
+    return `<tr>
+      <td width="64" style="padding:14px 14px 14px 0;border-bottom:1px solid ${K.line};vertical-align:middle">${img ? `<img src="${esc(absUrl(img))}" width="64" height="64" alt="" style="display:block;width:64px;height:64px;object-fit:cover;background:${K.bone}">` : ""}</td>
+      <td style="padding:14px 0;border-bottom:1px solid ${K.line};vertical-align:middle;font-family:${SERIF};font-size:19px;line-height:1.25;color:${K.charcoal}">${esc(l.name)}<br><span style="font-family:${SANS};font-size:13px;color:${K.muted}">Cantidad: ${l.qty}</span></td>
+      <td align="right" style="padding:14px 0 14px 12px;border-bottom:1px solid ${K.line};vertical-align:middle;font-family:${SANS};font-size:15px;color:${K.charcoal};white-space:nowrap">${clp(l.price * l.qty)}</td>
+    </tr>`;
+  };
+  const sum = (a, b, big) => `<tr><td style="padding:${big ? "12px 0 0" : "4px 0"};font-family:${big ? SERIF : SANS};font-size:${big ? 22 : 14}px;color:${big ? K.charcoal : K.muted}">${a}</td><td align="right" style="padding:${big ? "12px 0 0" : "4px 0"};font-family:${big ? SERIF : SANS};font-size:${big ? 22 : 14}px;color:${K.charcoal}">${b}</td></tr>`;
+  const p = o.payment;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet"></head>
+<body style="margin:0;padding:0;background:${K.cream}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${K.cream}"><tr><td align="center" style="padding:28px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${K.paper}">
+  <tr><td align="center" style="background:${K.charcoal};padding:30px 24px">
+    <a href="${SITE}"><img src="${SITE}/logo-blanco-h.png" width="170" alt="Dos Anillos" style="display:block;width:170px;height:auto;border:0"></a>
+  </td></tr>
+  <tr><td style="padding:40px 36px 8px">
+    <p style="margin:0 0 12px;font-family:${SANS};font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${K.sage}">${eyebrow}</p>
+    <h1 style="margin:0 0 16px;font-family:${SERIF};font-size:34px;font-weight:500;line-height:1.1;color:${K.charcoal}">${title}</h1>
+    <p style="margin:0;font-family:${SANS};font-size:15px;line-height:1.65;color:${K.ink}">${intro}</p>
+  </td></tr>
+  ${callout ? `<tr><td style="padding:24px 36px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:${K.bone};border-left:3px solid ${K.wood};padding:16px 18px;font-family:${SANS};font-size:14px;line-height:1.6;color:${K.ink}">${callout}</td></tr></table>
+  </td></tr>` : ""}
+  ${actions ? `<tr><td style="padding:24px 36px 0">${actions}</td></tr>` : ""}
+  <tr><td style="padding:34px 36px 0">
+    ${label(`Pedido ${esc(o.id)} · ${esc(when)}`)}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${K.line}">${o.lines.map(line).join("")}</table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px">
+      ${sum("Subtotal", clp(o.subtotal ?? o.total))}${sum("Envío", "Por coordinar")}${sum("Total pagado", clp(o.total), true)}
     </table>
-    <p style="margin-top:18px"><strong>Envío a:</strong><br>${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.comuna)}, ${esc(c.region)}<br>${esc(c.phone)} · ${esc(c.email)}${c.notes ? `<br><em>${esc(c.notes)}</em>` : ""}</p>
-    ${o.payment ? `<p style="color:#7a7366;font-size:13px">Mercado Pago · operación ${esc(o.payment.operation)}${o.payment.cardNumber ? ` · tarjeta terminada en ${esc(o.payment.cardNumber)}` : ""}</p>` : ""}
-  </div>`;
+  </td></tr>
+  <tr><td style="padding:34px 36px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td width="50%" style="vertical-align:top;padding-right:12px">
+        ${label("Envío a")}
+        <p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${K.ink}">${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.comuna)}, ${esc(c.region)}<br>${esc(c.phone)}<br>${esc(c.email)}${c.notes ? `<br><em style="color:${K.muted}">«${esc(c.notes)}»</em>` : ""}</p>
+      </td>
+      <td width="50%" style="vertical-align:top;padding-left:12px">
+        ${p ? `${label("Pago")}
+        <p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${K.ink}">Mercado Pago<br>Operación ${esc(p.operation)}${p.cardNumber ? `<br>Tarjeta terminada en ${esc(p.cardNumber)}` : ""}${p.installments > 1 ? `<br>${p.installments} cuotas` : ""}</p>` : ""}
+      </td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="padding:40px 36px 34px"><div style="border-top:1px solid ${K.line}"></div></td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px"><tr><td align="center" style="padding:22px 24px 8px;font-family:${SANS};font-size:12px;line-height:1.7;color:${K.muted}">
+  <span style="font-family:${SERIF};font-size:16px;color:${K.charcoal}">Dos Anillos</span><br>Instrumentos de madera hechos a mano<br>
+  <a href="${SITE}" style="color:${K.muted}">dosanillos.cl</a>
+</td></tr></table>
+</td></tr></table>
+</body></html>`;
 }
 
 // Avisa al cliente y a los dueños cuando un pedido queda pagado.
 async function notifyPaid(o) {
   const c = content();
   const owners = String(c.general.orderEmails || c.general.email).split(/[,;\s]+/).filter(Boolean);
+  const first = esc(o.customer.name.split(" ")[0]);
   await Promise.all([
-    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te escribiremos para acordar el costo del envío, que se paga aparte.`), c.general.email),
-    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, `Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente. <strong>Escríbele al cliente para acordar el costo del envío.</strong>`), o.customer.email),
+    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, {
+      preheader: `Pagaste ${clp(o.total)}. Te escribiremos para coordinar el envío.`,
+      eyebrow: "Pago aprobado",
+      title: `¡Gracias por tu compra, ${first}!`,
+      intro: "Recibimos tu pago y ya estamos preparando tu pedido. Cada pieza está hecha a mano en nuestro taller.",
+      callout: `<strong>El envío se coordina aparte.</strong> Te escribiremos por WhatsApp o por correo para acordar el costo del envío, que se paga por separado.`,
+      actions: c.general.whatsapp ? btn(waUrl(c.general.whatsapp, `Hola, tengo una consulta sobre mi pedido ${o.id}`), "Escríbenos por WhatsApp") : "",
+    }), c.general.email),
+    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, {
+      preheader: `${o.customer.name} pagó ${clp(o.total)} con Mercado Pago.`,
+      eyebrow: "Nueva venta",
+      title: `${clp(o.total)} · ${esc(o.customer.name)}`,
+      intro: "Llegó un pedido pagado con Mercado Pago. Si respondes este correo, le escribes directamente al cliente.",
+      callout: `<strong>Falta coordinar el envío.</strong> Escríbele al cliente para acordar el costo y la forma de despacho.`,
+      actions: btn(waUrl(o.customer.phone, `Hola ${o.customer.name.split(" ")[0]}, te escribimos de Dos Anillos por tu pedido ${o.id}. Coordinemos el envío:`), "WhatsApp al cliente") + btn(`${SITE}/admin`, "Ver en el panel", false),
+    }), o.customer.email),
   ]);
 }
 
