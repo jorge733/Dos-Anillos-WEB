@@ -64,7 +64,7 @@ window.CONTENT = {
       {
         "id": "pmv8ileeh",
         "name": "Prueba",
-        "price": 0,
+        "price": 1,
         "imgs": [
           "img/subida-mv8imhwc-4p3q.webp"
         ],
