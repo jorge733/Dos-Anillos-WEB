@@ -60,16 +60,6 @@ window.CONTENT = {
             "value": "Pentatónica en La 432 Hz"
           }
         ]
-      },
-      {
-        "id": "pmv8ileeh",
-        "name": "Prueba",
-        "price": 1,
-        "imgs": [
-          "img/subida-mv8imhwc-4p3q.webp"
-        ],
-        "desc": "Esto es una prueba para probar que funciona todo en orden con Mercado Pago",
-        "specs": []
       }
     ]
   },
