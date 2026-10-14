@@ -5,7 +5,7 @@ window.CONTENT = {
     "phone": "+56 9 6177 2886",
     "email": "dosanilloschile@gmail.com",
     "orderEmails": "dosanilloschile@gmail.com",
-    "originCounty": ""
+    "originCounty": "LCON"
   },
   "hero": {
     "eyebrow": "Lutería artesanal · desde 2024",
