@@ -13,12 +13,12 @@ window.CONTENT = {
     "image": "img/flautas-detalle.webp"
   },
   "productos": {
-    "eyebrow": "Catálogo",
+    "eyebrow": "Productos",
     "title": "Hechas a mano, pieza por pieza",
     "products": [
       {
-        "name": "Flauta pentatónica en La 432 Hz",
-        "price": 69.99,
+        "name": "Flauta pentatónica en La 432 Hz (Diestro)",
+        "price": 69990,
         "imgs": [
           "img/subida-mv7fln96-ivak.webp",
           "img/subida-mv7fgaam-2ioc.webp",
@@ -36,6 +36,25 @@ window.CONTENT = {
           {
             "label": "Afinación",
             "value": "Pentatónica en La (432 Hz)"
+          },
+          {
+            "label": "Tapón de Flauta (Block)",
+            "value": "Sirari "
+          }
+        ]
+      },
+      {
+        "name": "Limpiador (Flauta pentatónica) Repuesto",
+        "price": 6990,
+        "imgs": [
+          "img/subida-mv7g05hk-y7ne.webp",
+          "img/subida-mv7fz28q-id3a.webp"
+        ],
+        "desc": "Este es un limpiador que puedes comprar como repuesto si es que se te rompió  o extravió el limpiador que venía con la flauta originalmente.",
+        "specs": [
+          {
+            "label": "Flauta compatible ",
+            "value": "Pentatónica en La 432 Hz"
           }
         ]
       }
