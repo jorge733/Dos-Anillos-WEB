@@ -10,7 +10,7 @@ window.CONTENT = {
     "title": "Del alma",
     "titleEm": "al sonido",
     "lead": "Instrumentos y piezas de madera hechos a mano, veta a veta.",
-    "image": "img/flautas-detalle.webp"
+    "image": "img/subida-mv7gihvk-nsqm.webp"
   },
   "productos": {
     "eyebrow": "Productos",
