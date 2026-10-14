@@ -14,7 +14,7 @@ window.CONTENT = {
     "image": "img/subida-mv7gihvk-nsqm.webp"
   },
   "productos": {
-    "eyebrow": "Productos",
+    "eyebrow": "Nuestros Productos",
     "title": "Hechas a mano, pieza por pieza",
     "products": [
       {
