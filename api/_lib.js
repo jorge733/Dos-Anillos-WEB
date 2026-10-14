@@ -112,14 +112,16 @@ async function applyMercadoPago(paymentId) {
 }
 
 // ---------- Correos (Resend) ----------
+// Devuelve true si Resend aceptó el correo.
 async function mail(to, subject, html, replyTo) {
-  if (!env("RESEND_API_KEY") || !env("MAIL_FROM")) { console.warn("Correo no enviado: falta RESEND_API_KEY o MAIL_FROM."); return; }
+  if (!env("RESEND_API_KEY") || !env("MAIL_FROM")) { console.warn("Correo no enviado: falta RESEND_API_KEY o MAIL_FROM."); return false; }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: env("MAIL_FROM"), to, subject, html, reply_to: replyTo || undefined }),
   });
   if (!r.ok) console.error("Resend", r.status, await r.text());
+  return r.ok;
 }
 
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
@@ -139,7 +141,7 @@ const waUrl = (phone, text) => `https://wa.me/${waNumber(phone)}?text=${encodeUR
 const btn = (href, text, dark = true) => `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 10px 0;padding:13px 24px;background:${dark ? K.charcoal : "transparent"};border:1px solid ${K.charcoal};color:${dark ? K.paper : K.charcoal};font-family:${SANS};font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none">${text}</a>`;
 const label = text => `<p style="margin:0 0 10px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${K.muted}">${text}</p>`;
 
-function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "" }) {
+function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "", shipLabel = "Por coordinar" }) {
   const c = o.customer, products = content().productos.products;
   const when = new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "short" });
   const line = l => {
@@ -174,7 +176,7 @@ function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "" 
     ${label(`Pedido ${esc(o.id)} · ${esc(when)}`)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${K.line}">${o.lines.map(line).join("")}</table>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px">
-      ${sum("Subtotal", clp(o.subtotal ?? o.total))}${sum("Envío", "Por coordinar")}${sum("Total pagado", clp(o.total), true)}
+      ${sum("Subtotal", clp(o.subtotal ?? o.total))}${sum("Envío", shipLabel)}${sum("Total pagado", clp(o.total), true)}
     </table>
   </td></tr>
   <tr><td style="padding:34px 36px 0">
@@ -224,4 +226,21 @@ async function notifyPaid(o) {
   ]);
 }
 
-module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, MP_TEST };
+// Avisa al cliente que su pedido fue despachado, con la empresa y el número de seguimiento si los hay.
+// Devuelve true si el correo salió.
+async function notifyShipped(o) {
+  const c = content();
+  const first = esc(o.customer.name.split(" ")[0]);
+  const data = [o.carrier && `Empresa: <strong>${esc(o.carrier)}</strong>`, o.tracking && `Número de seguimiento: <strong style="letter-spacing:1px">${esc(o.tracking)}</strong>`].filter(Boolean);
+  return mail([o.customer.email], `Tu pedido ${o.id} va en camino`, orderHtml(o, {
+    preheader: data.length ? `Despachamos tu pedido${o.carrier ? ` por ${o.carrier}` : ""}${o.tracking ? `. Seguimiento: ${o.tracking}` : ""}.` : "Despachamos tu pedido.",
+    eyebrow: "Pedido enviado",
+    title: `¡Tu pedido va en camino, ${first}!`,
+    intro: "Ya despachamos tu pedido. Esperamos que lo disfrutes tanto como disfrutamos haciéndolo.",
+    callout: data.length ? `<strong>Datos del envío</strong><br>${data.join("<br>")}` : "Si tienes dudas sobre la entrega, escríbenos y te ayudamos.",
+    actions: c.general.whatsapp ? btn(waUrl(c.general.whatsapp, `Hola, tengo una consulta sobre el envío de mi pedido ${o.id}`), "¿Dudas? Escríbenos") : "",
+    shipLabel: "Coordinado aparte",
+  }), c.general.email);
+}
+
+module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };

@@ -255,13 +255,25 @@ function orderCard(o) {
 
   if (PAID.includes(o.status)) {
     const status = h("select", {}, ...PAID.map(s => h("option", { value: s, textContent: STATUS[s], selected: s === o.status })));
-    const tracking = h("input", { value: o.tracking || "", placeholder: "Nº de seguimiento del envío (opcional)" });
+    const carrier = h("input", { value: o.carrier || "", placeholder: "Ej.: Starken" });
+    carrier.setAttribute("list", "carriers");
+    const tracking = h("input", { value: o.tracking || "", placeholder: "Nº de seguimiento (opcional)" });
+    // La primera vez que el pedido queda "Enviado", el cliente recibe un correo con estos datos.
+    const notice = h("p", { className: "hint", textContent: o.shippedMailAt
+      ? `Correo de envío mandado al cliente: ${when(o.shippedMailAt)}`
+      : "Al guardarlo como «Enviado», le llega un correo al cliente avisando que su pedido va en camino, con la empresa y el número de seguimiento." });
     const save = h("button", { type: "button", className: "btn", textContent: "Guardar estado", onclick: async () => {
+      const willMail = status.value === "enviado" && !o.shippedMailAt;
+      if (willMail && !confirm(`Se le enviará un correo a ${c.email} avisando que su pedido va en camino${tracking.value.trim() ? "" : " (sin número de seguimiento)"}. ¿Continuar?`)) return;
       save.disabled = true; save.textContent = "Guardando…";
-      try { await api("orderStatus", { id: o.id, status: status.value, tracking: tracking.value }); renderOrders(); }
+      try {
+        const r = await api("orderStatus", { id: o.id, status: status.value, carrier: carrier.value, tracking: tracking.value });
+        if (willMail && !r.mailed) alert("El estado se guardó, pero no se pudo enviar el correo al cliente. Avísale por WhatsApp.");
+        renderOrders();
+      }
       catch (e) { alert(e.message); save.disabled = false; save.textContent = "Guardar estado"; }
     } });
-    card.append(h("div", { className: "row status-row" }, h("label", {}, "Estado", status), h("label", {}, "Seguimiento", tracking)), save);
+    card.append(h("div", { className: "row status-row" }, h("label", {}, "Estado", status), h("label", {}, "Empresa de envío", carrier), h("label", {}, "Seguimiento", tracking)), notice, save);
   }
   return card;
 }

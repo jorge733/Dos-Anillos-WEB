@@ -7,7 +7,7 @@
 //   GITHUB_REPO     opcional, por defecto jorge733/Dos-Anillos-WEB
 //   GITHUB_BRANCH   opcional, por defecto main
 const crypto = require("crypto");
-const { orders } = require("./_lib");
+const { orders, notifyShipped } = require("./_lib");
 
 const REPO = process.env.GITHUB_REPO || "jorge733/Dos-Anillos-WEB";
 const BRANCH = process.env.GITHUB_BRANCH || "main";
@@ -51,14 +51,20 @@ const actions = {
     return { orders: (await orders.list()).map(({ key, token, ...o }) => o) };
   },
 
-  // Cambia el estado de un pedido pagado (pagado → enviado → entregado) y anota el número de seguimiento.
-  async orderStatus({ id, status, tracking = "" }) {
+  // Cambia el estado de un pedido pagado (pagado → enviado → entregado) y anota la empresa y el número de seguimiento.
+  // La primera vez que queda "enviado", le llega un correo al cliente (una sola vez por pedido).
+  async orderStatus({ id, status, carrier = "", tracking = "" }) {
     if (!["pagado", "enviado", "entregado"].includes(status)) throw fail(400, "Estado inválido.");
     const o = await orders.get(String(id));
     if (!o || !["pagado", "enviado", "entregado"].includes(o.status)) throw fail(404, "Pedido no encontrado.");
-    Object.assign(o, { status, tracking: String(tracking).trim().slice(0, 60) });
+    Object.assign(o, { status, carrier: String(carrier).trim().slice(0, 40), tracking: String(tracking).trim().slice(0, 60) });
+    let mailed = null;
+    if (status === "enviado" && !o.shippedMailAt) {
+      mailed = await notifyShipped(o).catch(e => (console.error("Correo de envío", e), false));
+      if (mailed) o.shippedMailAt = Date.now();
+    }
     await orders.save(o);
-    return { ok: true };
+    return { ok: true, mailed };
   },
 
   // Sube una foto como blob suelto (no crea commit); queda incluida en el próximo guardado.
