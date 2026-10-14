@@ -1,39 +1,31 @@
-// POST /api/checkout { items, customer, service } → crea el pedido y la preferencia de pago en Mercado Pago.
-// El navegador recibe { url } y lleva al cliente a pagar ahí.
-// Los precios y el envío se vuelven a calcular aquí: nunca se usa lo que diga el navegador.
-const { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, mercadopago, MP_TEST } = require("./_lib");
+// GET  /api/checkout                          → { testMode }: si Mercado Pago usa credenciales de prueba
+// POST /api/checkout { items, customer }      → crea el pedido y la preferencia de pago en Mercado Pago.
+// El navegador recibe { url } y lleva al cliente a pagar ahí. El envío no se cobra: se coordina después con el vendedor.
+// Los precios se vuelven a calcular aquí: nunca se usa lo que diga el navegador.
+const { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, MP_TEST } = require("./_lib");
 
 const clean = (s, max) => String(s ?? "").trim().slice(0, max);
 
 module.exports = handle(async (req, res) => {
+  if (req.method === "GET") return res.json({ testMode: MP_TEST });
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido." });
-  const { items, customer: raw = {}, service } = req.body || {};
+  const { items, customer: raw = {} } = req.body || {};
   const customer = {
     name: clean(raw.name, 100), email: clean(raw.email, 120), phone: clean(raw.phone, 30),
-    address: clean(raw.address, 200), county: clean(raw.county, 20), notes: clean(raw.notes, 500),
+    address: clean(raw.address, 200), comuna: clean(raw.comuna, 60), region: clean(raw.region, 60), notes: clean(raw.notes, 500),
   };
-  if (!customer.name || !customer.phone || !customer.address) throw fail(400, "Completa nombre, teléfono y dirección.");
+  if (!customer.name || !customer.phone || !customer.address || !customer.comuna || !customer.region) throw fail(400, "Completa nombre, teléfono, región, comuna y dirección.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) throw fail(400, "Revisa tu correo.");
-  const place = (await communes()).find(c => c.code === customer.county);
-  if (!place) throw fail(400, "Elige tu comuna.");
-  Object.assign(customer, { countyName: place.name, region: place.region });
 
-  const c = content();
-  const cart = priceCart(items, c);
-  const shipping = (await quote(customer.county, cart, c)).find(o => o.code === String(service));
-  if (!shipping) throw fail(409, "El precio del envío cambió. Vuelve a elegir el tipo de envío.");
-
+  const cart = priceCart(items, content());
   const order = {
     id: newOrderId(), key: newKey(), status: "pendiente", method: "mercadopago", createdAt: Date.now(),
-    customer, lines: cart.lines.map(({ pkg, ...l }) => l), subtotal: cart.subtotal, shipping, total: cart.subtotal + shipping.price,
+    customer, lines: cart.lines, subtotal: cart.subtotal, shipping: { code: "coordinar", name: "Por coordinar con el vendedor", price: 0 }, total: cart.subtotal,
   };
   const proto = req.headers["x-forwarded-proto"] || (/^(localhost|127.0.0.1)(:|$)/.test(req.headers.host) ? "http" : "https");
   const back = `${proto}://${req.headers.host}/api/mercadopago`;
   const pref = await mercadopago("POST", "/checkout/preferences", {
-    items: [
-      ...order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
-      ...(shipping.price > 0 ? [{ id: "envio", title: `Envío Chilexpress (${shipping.name})`, quantity: 1, unit_price: shipping.price, currency_id: "CLP" }] : []),
-    ],
+    items: order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
     payer: { name: customer.name, email: customer.email },
     external_reference: order.id,
     back_urls: { success: back, failure: back, pending: back },

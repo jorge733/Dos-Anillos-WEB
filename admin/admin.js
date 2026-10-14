@@ -12,7 +12,6 @@ const TABS = [
     { k: "phone", label: "Teléfono que se muestra en Contacto" },
     { k: "email", label: "Correo de contacto", hint: "Se muestra en Inicio y en Contacto, y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
     { k: "orderEmails", label: "Correos que reciben el aviso de cada venta", hint: "Puedes poner varios separados por comas." },
-    { k: "originCounty", label: "Comuna desde donde se despachan los envíos", type: "commune", hint: "Chilexpress calcula el costo del envío desde esta comuna." },
   ] },
   { key: "hero", title: "Inicio", fields: [
     { k: "eyebrow", label: "Etiqueta pequeña" },
@@ -23,16 +22,10 @@ const TABS = [
   ] },
   { key: "productos", title: "Catálogo", fields: [...head,
     { k: "products", label: "Productos a la venta", type: "list", noun: "producto", name: p => p.name,
-      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, package: { weight: 0.3, length: 40, width: 10, height: 6 }, imgs: [], desc: "", specs: [] }),
+      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, imgs: [], desc: "", specs: [] }),
       fields: [
         { k: "name", label: "Nombre" },
         { k: "price", label: "Precio (CLP)", type: "number", step: 500 },
-        { k: "package", label: "Paquete para el envío (ya embalado, con estuche)", type: "group", hint: "Chilexpress cobra según el peso y el tamaño del paquete.", fields: [
-          { k: "weight", label: "Peso (kg)", type: "number", step: 0.05 },
-          { k: "length", label: "Largo (cm)", type: "number", step: 1 },
-          { k: "width", label: "Ancho (cm)", type: "number", step: 1 },
-          { k: "height", label: "Alto (cm)", type: "number", step: 1 },
-        ] },
         { k: "imgs", label: "Fotos", type: "gallery", hint: "La primera es la principal. Usa las flechas para ordenarlas." },
         { k: "desc", label: "Descripción", type: "textarea", hint: MD },
         { k: "specs", label: "Características", type: "list", noun: "característica", name: s => s.label, row: true,
@@ -157,18 +150,6 @@ function field(f, obj, rerender) {
       if (!v) obj[f.k] = {};
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
         h("div", { className: "row" }, ...f.fields.map(sub => field(sub, obj[f.k], rerender))));
-    case "commune": {
-      const select = h("select", { disabled: true, onchange: e => set(e.target.value) }, h("option", { value: v || "", textContent: "Cargando comunas de Chilexpress…" }));
-      const note = h("span", { className: "hint", textContent: f.hint });
-      communes().then(list => {
-        const regions = [...new Set(list.map(c => c.region))];
-        select.replaceChildren(h("option", { value: "", textContent: "Elige una comuna" }),
-          ...regions.map(r => h("optgroup", { label: r }, ...list.filter(c => c.region === r).sort((a, b) => a.name.localeCompare(b.name, "es"))
-            .map(c => h("option", { value: c.code, textContent: c.name, selected: c.code === v })))));
-        select.disabled = false;
-      }).catch(e => { select.firstChild.textContent = v ? `Código ${v}` : "No disponible"; note.textContent = `No se pudieron cargar las comunas: ${e.message}`; note.style.color = "var(--error)"; });
-      return h("label", {}, f.label, select, note);
-    }
     case "swatch": {
       const sw = h("div", { className: "swatch" }); sw.style.background = v;
       const color = h("input", { type: "color", value: baseColor(v), oninput: e => { set(gradient(e.target.value)); sw.style.background = obj[f.k]; } });
@@ -264,17 +245,17 @@ function orderCard(o) {
     h("p", { className: "hint", textContent: `Pedido ${o.id} · ${when(o.paidAt || o.createdAt)}` }),
     dl(["Correo", link(`mailto:${c.email}`, c.email)],
        ["Teléfono", link(`https://wa.me/${c.phone.replace(/D/g, "")}`, c.phone)],
-       ["Dirección", `${c.address}, ${c.countyName}, ${c.region}`],
+       ["Dirección", `${c.address}, ${c.comuna}, ${c.region}`],
        ["Notas", c.notes]),
     h("ul", { className: "lines" },
       ...o.lines.map(l => h("li", {}, h("span", { textContent: `${l.qty} × ${l.name}` }), h("span", { textContent: clp(l.price * l.qty) }))),
-      h("li", {}, h("span", { textContent: `Envío Chilexpress · ${o.shipping.name}` }), h("span", { textContent: o.shipping.code === "coordinar" ? "Por coordinar con el cliente" : clp(o.shipping.price) })),
+      h("li", {}, h("span", { textContent: "Envío" }), h("span", { textContent: "Por coordinar con el cliente" })),
       h("li", { className: "sum" }, h("span", { textContent: "Total" }), h("span", { textContent: clp(o.total) }))),
     p.operation ? dl(payText(p)) : null);
 
   if (PAID.includes(o.status)) {
     const status = h("select", {}, ...PAID.map(s => h("option", { value: s, textContent: STATUS[s], selected: s === o.status })));
-    const tracking = h("input", { value: o.tracking || "", placeholder: "Nº de seguimiento de Chilexpress (opcional)" });
+    const tracking = h("input", { value: o.tracking || "", placeholder: "Nº de seguimiento del envío (opcional)" });
     const save = h("button", { type: "button", className: "btn", textContent: "Guardar estado", onclick: async () => {
       save.disabled = true; save.textContent = "Guardando…";
       try { await api("orderStatus", { id: o.id, status: status.value, tracking: tracking.value }); renderOrders(); }
@@ -284,14 +265,6 @@ function orderCard(o) {
   }
   return card;
 }
-
-// Comunas con cobertura de Chilexpress (las mismas que ve el cliente al comprar).
-let communeList;
-const communes = () => (communeList ||= fetch("/api/shipping").then(async r => {
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) { communeList = null; throw new Error(d.error || `Error ${r.status}`); }
-  return d.communes;
-}));
 
 // ---------- Entrar, guardar, salir ----------
 async function open(pw) {

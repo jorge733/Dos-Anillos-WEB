@@ -17,23 +17,21 @@ Configuración (una sola vez):
    - Opcionales: `GITHUB_REPO` (por defecto `jorge733/Dos-Anillos-WEB`) y `GITHUB_BRANCH` (por defecto `main`).
 3. Vuelve a publicar (*Deployments → Redeploy*) para que tome las variables.
 
-## Tienda: carrito, Mercado Pago y envíos con Chilexpress
+## Tienda: carrito y Mercado Pago
 
-El cliente arma su carrito, elige región y comuna, y Chilexpress cotiza el envío según el peso y las medidas del paquete (se configuran por producto en `/admin`). Paga con Mercado Pago (Checkout Pro). Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
+El cliente arma su carrito, deja sus datos de envío y paga los productos con Mercado Pago (Checkout Pro). El envío no se cobra en la tienda: después de la compra el vendedor le escribe para coordinarlo, y se paga aparte. Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
 
-Funciones: `api/shipping.js` (comunas y cotización), `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios y el envío siempre se recalculan en el servidor.
+Funciones: `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios siempre se recalculan en el servidor.
 
 Variables de entorno en Vercel:
 
 | Variable | Para qué |
 | --- | --- |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Base de datos de pedidos. Se crean solas al conectar **Upstash for Redis** desde *Storage* en Vercel. |
-| `CHILEXPRESS_COVERAGE_KEY`, `CHILEXPRESS_RATING_KEY` | Llaves de las APIs *Cobertura* y *Cotizador* del portal developers.wschilexpress.com. |
-| `CHILEXPRESS_ENV` | `production` para usar el ambiente real de Chilexpress (por defecto, el de pruebas). |
 | `RESEND_API_KEY`, `MAIL_FROM` | Correos con Resend. `MAIL_FROM` debe usar un dominio verificado en Resend, ej.: `Dos Anillos <pedidos@dosanillos.cl>`. |
 | `MERCADOPAGO_ACCESS_TOKEN` | *Access Token* de Mercado Pago. Si empieza con `TEST-` (credenciales de prueba), no cobra y el carrito muestra el aviso de «modo de prueba». |
 
-En `/admin` → *Datos generales* hay que elegir la comuna desde donde se despacha y los correos que reciben el aviso de cada venta.
+En `/admin` → *Datos generales* se eligen los correos que reciben el aviso de cada venta.
 
 ### Mercado Pago
 

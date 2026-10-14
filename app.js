@@ -125,13 +125,12 @@ let cart = [];
 try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)); } catch {}
 const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
 const subtotal = () => cart.reduce((s, i) => s + product(i.id).price * i.qty, 0);
-let shipOptions = [], shipChoice = null, quoteSeq = 0;
 
 function setQty(id, qty) {
   const item = cart.find(i => i.id === id);
   if (item) item.qty = Math.max(0, Math.min(20, qty)); else if (qty > 0) cart.push({ id, qty });
   cart = cart.filter(i => i.qty > 0);
-  saveCart(); renderCart(); requote();
+  saveCart(); renderCart();
 }
 
 function renderCart() {
@@ -147,14 +146,11 @@ function renderCart() {
   renderTotals();
 }
 
-// Si Chilexpress no puede cotizar, el envío queda por coordinar con el vendedor y se paga aparte.
-const shipPrice = s => s.code === "coordinar" ? "Por coordinar" : clp(s.price);
-
+// El envío no se cobra en la tienda: se coordina con el vendedor después de la compra y se paga aparte.
 function renderTotals() {
-  const ship = shipOptions.find(o => o.code === shipChoice);
-  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>${ship ? shipPrice(ship) : "—"}</dd>
-    <dt class="total">Total</dt><dd class="total">${clp(subtotal() + (ship ? ship.price : 0))}</dd>`;
-  $("#payBtn").disabled = !ship;
+  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>Por coordinar</dd>
+    <dt class="total">Total</dt><dd class="total">${clp(subtotal())}</dd>`;
+  $("#payBtn").disabled = !cart.length;
 }
 
 $("#products").addEventListener("click", e => {
@@ -168,58 +164,18 @@ $("#cart").addEventListener("click", e => {
   if (b) { const id = b.parentElement.dataset.id; setQty(id, cart.find(i => i.id === id).qty + Number(b.dataset.d)); }
 });
 
-// ---------- Comunas y costo de envío (Chilexpress) ----------
-const shipMsg = html => { $("#ship").innerHTML = `<legend>Envío por Chilexpress</legend><p class="muted small">${html}</p>`; };
 const waHelp = `<a class="link" href="${waLink()}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>`;
-let communes = null;
 
-async function loadCommunes() {
-  if (communes) return;
-  communes = [];
+// Mientras Mercado Pago use credenciales de prueba, se avisa que no hay cobros reales.
+let testChecked = false;
+async function checkTestMode() {
+  if (testChecked) return;
+  testChecked = true;
   try {
-    const r = await fetch("/api/shipping");
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error);
-    communes = data.communes;
-    // Mientras Mercado Pago use credenciales de prueba, se avisa que no hay cobros reales.
-    if (data.testMode) $("#checkout").prepend(Object.assign(document.createElement("p"), { className: "wide test-mode", textContent: "Modo de prueba: Mercado Pago usa credenciales de prueba y no se hacen cobros reales." }));
-    const regions = [...new Set(communes.map(c => c.region))];
-    $("#region").innerHTML = `<option value="">Elige tu región</option>` + regions.map(r => `<option>${esc(r)}</option>`).join("");
-  } catch {
-    communes = null;
-    $("#region").innerHTML = `<option value="">No disponible</option>`;
-    shipMsg(`No pudimos cargar las comunas en este momento. Intenta de nuevo en unos minutos o ${waHelp}.`);
-  }
+    const { testMode } = await (await fetch("/api/checkout")).json();
+    if (testMode) $("#checkout").prepend(Object.assign(document.createElement("p"), { className: "wide test-mode", textContent: "Modo de prueba: Mercado Pago usa credenciales de prueba y no se hacen cobros reales." }));
+  } catch {}
 }
-
-$("#region").onchange = () => {
-  const list = (communes || []).filter(c => c.region === $("#region").value).sort((a, b) => a.name.localeCompare(b.name, "es"));
-  $("#county").innerHTML = `<option value="">Elige tu comuna</option>` + list.map(c => `<option value="${esc(c.code)}">${esc(c.name)}</option>`).join("");
-  $("#county").disabled = !list.length;
-  quoteSeq++; shipOptions = []; shipChoice = null; renderTotals(); shipMsg("Elige tu comuna para calcular el envío.");
-};
-$("#county").onchange = () => requote();
-
-async function requote() {
-  const county = $("#county").value, seq = ++quoteSeq;
-  shipOptions = []; shipChoice = null; renderTotals();
-  if (!county || !cart.length) return;
-  shipMsg("Calculando envío…");
-  try {
-    const r = await fetch("/api/shipping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ county, items: cart }) });
-    const data = await r.json();
-    if (seq !== quoteSeq) return; // llegó una respuesta vieja
-    if (!r.ok) throw new Error(data.error);
-    shipOptions = data.options; shipChoice = shipOptions[0].code;
-    $("#ship").innerHTML = `<legend>Envío por Chilexpress</legend>` + shipOptions.map(o => `
-      <label class="ship-opt"><input type="radio" name="service" value="${esc(o.code)}" ${o.code === shipChoice ? "checked" : ""}><span>${esc(o.name)}</span><strong>${shipPrice(o)}</strong></label>`).join("")
-      + (shipOptions.some(o => o.code === "coordinar") ? `<p class="muted small">No pudimos calcular el envío automáticamente. Pagas solo los productos y te escribimos para acordar el costo del envío, que se paga aparte.</p>` : "");
-    renderTotals();
-  } catch (e) {
-    if (seq === quoteSeq) shipMsg(`${esc(e.message || "No pudimos calcular el envío.")} Si necesitas ayuda, ${waHelp}.`);
-  }
-}
-$("#ship").addEventListener("change", e => { if (e.target.name === "service") { shipChoice = e.target.value; renderTotals(); } });
 
 // ---------- Pago con Mercado Pago ----------
 $("#checkout").addEventListener("submit", async e => {
@@ -228,22 +184,19 @@ $("#checkout").addEventListener("submit", async e => {
   btn.disabled = true; btn.textContent = "Conectando con Mercado Pago…";
   try {
     const customer = Object.fromEntries(new FormData(f));
-    delete customer.service;
-    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, customer, service: shipChoice }) });
+    const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, customer }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     location.href = data.url;
   } catch (err) {
     toast(err.message || "No se pudo iniciar el pago. Intenta de nuevo.");
     btn.textContent = "Pagar con Mercado Pago"; renderTotals();
-    if (/envío/.test(err.message || "")) requote();
   }
 });
 // Si el cliente vuelve con el botón "atrás" del navegador, el botón de pago queda como al principio.
 addEventListener("pageshow", e => { if (e.persisted) { $("#payBtn").textContent = "Pagar con Mercado Pago"; renderTotals(); } });
 
-// Las comunas se piden recién cuando alguien abre el carrito.
-const onCart = () => location.hash === "#carrito" && cart.length && loadCommunes();
+const onCart = () => location.hash === "#carrito" && cart.length && checkTestMode();
 addEventListener("hashchange", onCart);
 renderCart(); onCart();
 
@@ -272,7 +225,7 @@ async function showOrder() {
     box.innerHTML = `
       <p class="eyebrow">Pago aprobado</p>
       <h2>¡Gracias por tu compra, ${esc(o.customer.name.split(" ")[0])}!</h2>
-      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. ${o.shipping.code === "coordinar" ? "Te escribiremos para acordar el costo del envío, que se paga aparte." : "Te avisaremos cuando despachemos tu pedido."}</p>
+      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. Te escribiremos para acordar el costo del envío, que se paga aparte.</p>
       <dl class="voucher">
         <dt>Número de pedido</dt><dd>${esc(o.id)}</dd>
         <dt>Monto pagado</dt><dd>${clp(o.total)}</dd>
@@ -283,7 +236,7 @@ async function showOrder() {
         ${p.cardNumber ? `<dt>Cuotas</dt><dd>${p.installments > 1 ? p.installments : "Sin cuotas"}</dd><dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>` : ""}
       </dl>
       <ul class="cart-list">${o.lines.map(l => `<li><div><h3>${l.qty} × ${esc(l.name)}</h3></div><strong>${clp(l.price * l.qty)}</strong></li>`).join("")}
-        <li><div><h3>Envío Chilexpress</h3><p class="muted">${esc(o.shipping.name)}</p></div><strong>${shipPrice(o.shipping)}</strong></li></ul>
+        <li><div><h3>Envío</h3><p class="muted">Se coordina contigo y se paga aparte</p></div><strong>Por coordinar</strong></li></ul>
       <a class="btn" href="#inicio">Volver al inicio</a>`;
   } catch { fail("No encontramos tu pedido", `Si pagaste y no ves tu comprobante, ${waHelp} y te ayudamos.`); }
 }

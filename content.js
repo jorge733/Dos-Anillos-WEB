@@ -4,8 +4,7 @@ window.CONTENT = {
     "whatsapp": "56961772886",
     "phone": "+56 9 6177 2886",
     "email": "dosanilloschile@gmail.com",
-    "orderEmails": "dosanilloschile@gmail.com",
-    "originCounty": "LCON"
+    "orderEmails": "dosanilloschile@gmail.com"
   },
   "hero": {
     "eyebrow": "Lutería artesanal · desde 2024",
@@ -22,12 +21,6 @@ window.CONTENT = {
         "id": "flauta-pentatonica-diestro",
         "name": "Flauta pentatónica en La 432 Hz (Diestro)",
         "price": 69990,
-        "package": {
-          "weight": 0.3,
-          "length": 40,
-          "width": 10,
-          "height": 6
-        },
         "imgs": [
           "img/subida-mv7fln96-ivak.webp",
           "img/subida-mv7fgaam-2ioc.webp",
@@ -56,12 +49,6 @@ window.CONTENT = {
         "id": "limpiador-repuesto",
         "name": "Limpiador (Flauta pentatónica) Repuesto",
         "price": 6990,
-        "package": {
-          "weight": 0.1,
-          "length": 35,
-          "width": 5,
-          "height": 3
-        },
         "imgs": [
           "img/subida-mv7g05hk-y7ne.webp",
           "img/subida-mv7fz28q-id3a.webp"

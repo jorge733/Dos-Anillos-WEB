@@ -1,11 +1,8 @@
-// Piezas compartidas por las funciones de la tienda: contenido, base de datos, Chilexpress, Mercado Pago y correos.
+// Piezas compartidas por las funciones de la tienda: contenido, base de datos, Mercado Pago y correos.
 // Los archivos de api/ que empiezan con "_" no son direcciones públicas: solo se importan desde las otras funciones.
 //
 // Variables de entorno (Vercel → Settings → Environment Variables):
 //   KV_REST_API_URL / KV_REST_API_TOKEN      base de datos Upstash Redis (Vercel las crea al conectar Upstash desde Storage)
-//   CHILEXPRESS_COVERAGE_KEY                 llave de la API "Cobertura" de Chilexpress
-//   CHILEXPRESS_RATING_KEY                   llave de la API "Cotizador" de Chilexpress
-//   CHILEXPRESS_ENV                          "production" para usar el ambiente real (por defecto, el de pruebas)
 //   MERCADOPAGO_ACCESS_TOKEN                 Access Token de Mercado Pago (de producción para cobrar de verdad)
 //   RESEND_API_KEY                           llave de Resend para enviar correos
 //   MAIL_FROM                                remitente verificado en Resend, ej.: Dos Anillos <pedidos@dosanillos.cl>
@@ -26,7 +23,7 @@ const handle = fn => async (req, res) => {
   }
 };
 
-// ---------- Contenido (precios, medidas del paquete, comuna de origen) ----------
+// ---------- Contenido (precios) ----------
 // Se lee el content.js publicado junto con la función, así los precios nunca vienen del navegador.
 function content() {
   const text = fs.readFileSync(path.join(process.cwd(), "content.js"), "utf8");
@@ -41,7 +38,7 @@ function priceCart(items, c = content()) {
     const n = Math.floor(Number(qty));
     if (!p) throw fail(400, "Un producto del carrito ya no está disponible. Revisa el carrito.");
     if (!(n >= 1 && n <= 20)) throw fail(400, "Cantidad inválida.");
-    return { id, name: p.name, price: Number(p.price), qty: n, pkg: p.package || {} };
+    return { id, name: p.name, price: Number(p.price), qty: n };
   });
   return { lines, subtotal: lines.reduce((s, l) => s + l.price * l.qty, 0) };
 }
@@ -72,88 +69,6 @@ const orders = {
 // Número de pedido corto y sin símbolos raros (va a Mercado Pago como referencia).
 const newOrderId = () => "DA" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString("hex").toUpperCase();
 const newKey = () => crypto.randomBytes(16).toString("hex");
-
-// ---------- Chilexpress ----------
-// Toda la conversación con Chilexpress está en este bloque, para ajustarlo en un solo lugar si cambian su API.
-const CX_BASE = env("CHILEXPRESS_ENV") === "production" ? "https://services.wschilexpress.com" : "https://testservices.wschilexpress.com";
-
-async function cx(pathname, key, init = {}) {
-  if (!env(key)) throw fail(500, `Falta configurar ${key} en Vercel.`);
-  const r = await fetch(CX_BASE + pathname, {
-    ...init,
-    headers: { "Ocp-Apim-Subscription-Key": env(key), "Content-Type": "application/json", "Cache-Control": "no-cache" },
-    signal: AbortSignal.timeout(10000),
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw fail(502, `Chilexpress respondió ${r.status}${data.statusDescription ? `: ${data.statusDescription}` : ""}.`);
-  return data;
-}
-
-// Lista de comunas con cobertura, agrupadas por región. Se guarda una semana en la base de datos.
-async function communes() {
-  const cached = await redis("GET", "cx:communes:v2").catch(() => null);
-  if (cached) return JSON.parse(cached);
-  const { regions = [] } = await cx("/georeference/api/v1.0/regions", "CHILEXPRESS_COVERAGE_KEY");
-  const list = [];
-  for (const reg of regions) {
-    const { coverageAreas = [] } = await cx(`/georeference/api/v1.0/coverage-areas?RegionCode=${encodeURIComponent(reg.regionId)}&type=0`, "CHILEXPRESS_COVERAGE_KEY");
-    // Chilexpress trae cada localidad por separado (varias por comuna). Se deja una por comuna:
-    // la que se llama igual que la comuna, o la primera si ninguna se llama así.
-    const byName = new Map();
-    for (const a of coverageAreas) {
-      const name = titleCase(a.countyName || a.coverageName);
-      if (!byName.has(name) || (a.coverageName || "").toUpperCase() === (a.countyName || "").toUpperCase()) byName.set(name, a.countyCode);
-    }
-    for (const [name, code] of byName) list.push({ code, name, region: titleCase(reg.regionName) });
-  }
-  if (!list.length) throw fail(502, "Chilexpress no entregó la lista de comunas.");
-  await redis("SET", "cx:communes:v2", JSON.stringify(list), "EX", 7 * 24 * 3600).catch(() => {});
-  return list;
-}
-const titleCase = s => String(s || "").toLowerCase().replace(/\S+/g, (w, i) => i && /^(de|del|la|las|los|el|y)$/.test(w) ? w : w[0].toUpperCase() + w.slice(1));
-
-// Arma un solo paquete con todo el carrito: suma pesos y altos, toma el largo y ancho mayores.
-function packageOf(lines) {
-  const n = k => l => Number(l.pkg[k]) || { weight: 0.3, length: 40, width: 10, height: 6 }[k];
-  return {
-    weight: lines.reduce((s, l) => s + n("weight")(l) * l.qty, 0).toFixed(2),
-    length: String(Math.max(...lines.map(n("length")))),
-    width: String(Math.max(...lines.map(n("width")))),
-    height: String(lines.reduce((s, l) => s + n("height")(l) * l.qty, 0)),
-  };
-}
-
-// Opciones de envío de Chilexpress para un carrito y una comuna de destino.
-// Si Chilexpress no puede cotizar (llave sin habilitar, caída, etc.), el envío queda por coordinar con el vendedor:
-// el cliente paga solo los productos y el costo del envío se acuerda y se paga aparte.
-async function quote(county, cart, c = content()) {
-  if (!c.general.originCounty) throw fail(500, "Falta elegir la comuna de origen de los envíos en /admin.");
-  if (!county) throw fail(400, "Elige tu comuna.");
-  try { return await chilexpressQuote(county, cart, c); }
-  catch (e) {
-    if (e.status === 422) throw e; // Chilexpress respondió, pero no llega a esa comuna
-    console.warn("Envío por coordinar:", e.message);
-    return [{ code: "coordinar", name: "Por coordinar con el vendedor", price: 0 }];
-  }
-}
-
-async function chilexpressQuote(county, cart, c) {
-  const data = await cx("/rating/api/v1.0/rates/courier", "CHILEXPRESS_RATING_KEY", { method: "POST", body: JSON.stringify({
-    originCountyCode: c.general.originCounty,
-    destinationCountyCode: county,
-    package: packageOf(cart.lines),
-    productType: 3, // 3 = encomienda
-    contentType: 1,
-    declaredWorth: String(cart.subtotal),
-    deliveryTime: 0, // 0 = todas las modalidades
-  }) });
-  const options = (data.data?.courierServiceOptions || [])
-    .map(o => ({ code: String(o.serviceTypeCode), name: titleCase(o.serviceDescription), price: Math.round(Number(o.serviceValue)) }))
-    .filter(o => o.price > 0)
-    .sort((a, b) => a.price - b.price);
-  if (!options.length) throw fail(422, "Chilexpress no tiene envíos disponibles a esa comuna.");
-  return options;
-}
 
 // ---------- Mercado Pago (Checkout Pro) ----------
 // Las credenciales de prueba de Mercado Pago empiezan con "TEST-"; con ellas no se cobra de verdad.
@@ -208,7 +123,6 @@ async function mail(to, subject, html, replyTo) {
 }
 
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
-const shipPrice = s => s.code === "coordinar" ? "Por coordinar" : clp(s.price);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 function orderHtml(o, intro) {
@@ -220,10 +134,10 @@ function orderHtml(o, intro) {
     <p><strong>Pedido ${esc(o.id)}</strong> · ${new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago" })}</p>
     <table style="width:100%;border-collapse:collapse;border-top:1px solid #d9d0bf;border-bottom:1px solid #d9d0bf">
       ${o.lines.map(l => row(`${l.qty} × ${esc(l.name)}`, clp(l.price * l.qty))).join("")}
-      ${row(`Envío Chilexpress (${esc(o.shipping.name)})`, shipPrice(o.shipping))}
+      ${row("Envío", "Por coordinar")}
       ${row("Total pagado", clp(o.total), true)}
     </table>
-    <p style="margin-top:18px"><strong>Envío a:</strong><br>${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.countyName)}, ${esc(c.region)}<br>${esc(c.phone)} · ${esc(c.email)}${c.notes ? `<br><em>${esc(c.notes)}</em>` : ""}</p>
+    <p style="margin-top:18px"><strong>Envío a:</strong><br>${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.comuna)}, ${esc(c.region)}<br>${esc(c.phone)} · ${esc(c.email)}${c.notes ? `<br><em>${esc(c.notes)}</em>` : ""}</p>
     ${o.payment ? `<p style="color:#7a7366;font-size:13px">Mercado Pago · operación ${esc(o.payment.operation)}${o.payment.cardNumber ? ` · tarjeta terminada en ${esc(o.payment.cardNumber)}` : ""}</p>` : ""}
   </div>`;
 }
@@ -232,11 +146,10 @@ function orderHtml(o, intro) {
 async function notifyPaid(o) {
   const c = content();
   const owners = String(c.general.orderEmails || c.general.email).split(/[,;\s]+/).filter(Boolean);
-  const coord = o.shipping.code === "coordinar";
   await Promise.all([
-    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! ${coord ? "Te escribiremos para acordar el costo del envío, que se paga aparte." : "Te avisaremos cuando despachemos tu pedido."}`), c.general.email),
-    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, `Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente.${coord ? " <strong>El envío quedó por coordinar: escríbele al cliente para acordar el costo.</strong>" : ""}`), o.customer.email),
+    mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te escribiremos para acordar el costo del envío, que se paga aparte.`), c.general.email),
+    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, `Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente. <strong>Escríbele al cliente para acordar el costo del envío.</strong>`), o.customer.email),
   ]);
 }
 
-module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, mercadopago, applyMercadoPago, notifyPaid, MP_TEST };
+module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, MP_TEST };
