@@ -91,21 +91,23 @@ async function cx(pathname, key, init = {}) {
 
 // Lista de comunas con cobertura, agrupadas por región. Se guarda una semana en la base de datos.
 async function communes() {
-  const cached = await redis("GET", "cx:communes").catch(() => null);
+  const cached = await redis("GET", "cx:communes:v2").catch(() => null);
   if (cached) return JSON.parse(cached);
   const { regions = [] } = await cx("/georeference/api/v1.0/regions", "CHILEXPRESS_COVERAGE_KEY");
   const list = [];
   for (const reg of regions) {
     const { coverageAreas = [] } = await cx(`/georeference/api/v1.0/coverage-areas?RegionCode=${encodeURIComponent(reg.regionId)}&type=0`, "CHILEXPRESS_COVERAGE_KEY");
-    const seen = new Set();
+    // Chilexpress trae cada localidad por separado (varias por comuna). Se deja una por comuna:
+    // la que se llama igual que la comuna, o la primera si ninguna se llama así.
+    const byName = new Map();
     for (const a of coverageAreas) {
-      if (seen.has(a.countyCode)) continue;
-      seen.add(a.countyCode);
-      list.push({ code: a.countyCode, name: titleCase(a.countyName || a.coverageName), region: reg.regionName });
+      const name = titleCase(a.countyName || a.coverageName);
+      if (!byName.has(name) || (a.coverageName || "").toUpperCase() === (a.countyName || "").toUpperCase()) byName.set(name, a.countyCode);
     }
+    for (const [name, code] of byName) list.push({ code, name, region: titleCase(reg.regionName) });
   }
   if (!list.length) throw fail(502, "Chilexpress no entregó la lista de comunas.");
-  await redis("SET", "cx:communes", JSON.stringify(list), "EX", 7 * 24 * 3600).catch(() => {});
+  await redis("SET", "cx:communes:v2", JSON.stringify(list), "EX", 7 * 24 * 3600).catch(() => {});
   return list;
 }
 const titleCase = s => String(s || "").toLowerCase().replace(/\S+/g, (w, i) => i && /^(de|del|la|las|los|el|y)$/.test(w) ? w : w[0].toUpperCase() + w.slice(1));
