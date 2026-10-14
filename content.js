@@ -18,12 +18,14 @@ window.CONTENT = {
     "products": [
       {
         "name": "Flauta pentatónica en La 432 Hz",
-        "price": 70000,
+        "price": 69.99,
         "imgs": [
-          "img/flautas-horizontal.webp",
-          "img/flautas-vertical.webp",
-          "img/flautas-detalle.webp",
-          "img/flautas-cruzadas-arcoiris.webp"
+          "img/subida-mv7fln96-ivak.webp",
+          "img/subida-mv7fgaam-2ioc.webp",
+          "img/subida-mv7fhy1l-jlth.webp",
+          "img/subida-mv7fl2rw-0iz7.webp",
+          "img/subida-mv7fex8w-gwpn.webp",
+          "img/subida-mv7f6s9z-hzpn.webp"
         ],
         "desc": "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical. Incluye estuche y limpiador hechos por nosotros.",
         "specs": [
