@@ -136,28 +136,33 @@ a.btn.full{display:block}
 .workshop figcaption{font-size:.78rem;color:var(--muted);margin-top:.6rem}
 
 /* Catálogo: todas las fotos a la vista + ficha */
+#products{display:grid}
 .product{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:3.5rem;align-items:start}
-.photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-.photos figure{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--bone);margin:0}
+.product+.product{margin-top:5rem;padding-top:5rem;border-top:1px solid var(--line)}
+.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+.photos figure{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--bone);margin:0}
+.photos figure:first-child{grid-column:1/-1;aspect-ratio:4/3}
 .photo-bg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(18px) brightness(.85)}
 .photos img{position:relative;width:100%;height:100%;object-fit:contain}
+.photos figure:not(:first-child) img{object-fit:cover}
 .product .info{position:sticky;top:3rem}
 .product h3{font-size:2.4rem}
 .price{font-size:1.2rem;font-weight:500;color:var(--charcoal);margin:.6rem 0 1.4rem}
 .product .desc{font-size:.95rem;margin-bottom:1.6rem}
 .product .desc p+p,.care p+p{margin-top:.8rem}
-.specs{display:grid;grid-template-columns:auto 1fr;gap:.6rem 1.5rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+.specs{display:grid;grid-template-columns:auto 1fr;gap:.6rem 1.5rem;padding:1.4rem 0;margin-bottom:1.6rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .specs dt{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:.15rem}
 .specs dd{color:var(--charcoal)}
 @media (max-width:900px){
-  .product{grid-template-columns:1fr;gap:2.5rem}
+  .product{grid-template-columns:1fr;gap:2rem}
+  .product+.product{margin-top:3.5rem;padding-top:3.5rem}
   .product .info{position:static}
+  .product h3{font-size:2rem}
 }
 @media (max-width:560px){
-  .photos{grid-template-columns:1fr}
-  .photos figure{aspect-ratio:auto}
-  .photo-bg{display:none}
-  .photos img{height:auto}
+  .photos{gap:.5rem}
+  .photos figure:first-child{aspect-ratio:1/1}
+  .photos figure:not(:first-child){aspect-ratio:1/1}
 }
 img.avatar{object-fit:cover;object-position:center top;padding:0}
 
