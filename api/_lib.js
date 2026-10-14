@@ -124,9 +124,22 @@ function packageOf(lines) {
 }
 
 // Opciones de envío de Chilexpress para un carrito y una comuna de destino.
+// Si Chilexpress no puede cotizar (llave sin habilitar, caída, etc.), se usa el precio fijo por zona de /admin.
 async function quote(county, cart, c = content()) {
   if (!c.general.originCounty) throw fail(500, "Falta elegir la comuna de origen de los envíos en /admin.");
   if (!county) throw fail(400, "Elige tu comuna.");
+  try { return await chilexpressQuote(county, cart, c); }
+  catch (e) {
+    if (e.status === 422) throw e; // Chilexpress respondió, pero no llega a esa comuna
+    const place = (await communes()).find(p => p.code === county);
+    const price = Number(place && /metropolitana/i.test(place.region) ? c.general.shipRM : c.general.shipOther);
+    if (!place || !(price > 0)) throw e;
+    console.warn("Envío con precio fijo:", e.message);
+    return [{ code: "fijo", name: "Envío por Chilexpress", price: Math.round(price) }];
+  }
+}
+
+async function chilexpressQuote(county, cart, c) {
   const data = await cx("/rating/api/v1.0/rates/courier", "CHILEXPRESS_RATING_KEY", { method: "POST", body: JSON.stringify({
     originCountyCode: c.general.originCounty,
     destinationCountyCode: county,
