@@ -57,6 +57,15 @@ window.CONTENT = {
             "value": "Pentatónica en La 432 Hz"
           }
         ]
+      },
+      {
+        "name": "Nuevo producto",
+        "price": 50,
+        "imgs": [
+          "img/subida-mv8cdge0-mrb1.webp"
+        ],
+        "desc": "",
+        "specs": []
       }
     ]
   },
