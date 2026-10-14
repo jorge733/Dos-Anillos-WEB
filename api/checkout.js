@@ -1,7 +1,7 @@
-// POST /api/checkout { items, customer, service } → crea el pedido y la transacción de Webpay.
-// El navegador recibe { url, token } y envía al cliente al formulario de pago de Transbank.
+// POST /api/checkout { items, customer, service } → crea el pedido y la preferencia de pago en Mercado Pago.
+// El navegador recibe { url } y lleva al cliente a pagar ahí.
 // Los precios y el envío se vuelven a calcular aquí: nunca se usa lo que diga el navegador.
-const { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, webpay } = require("./_lib");
+const { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, mercadopago, MP_TEST } = require("./_lib");
 
 const clean = (s, max) => String(s ?? "").trim().slice(0, max);
 
@@ -24,13 +24,24 @@ module.exports = handle(async (req, res) => {
   if (!shipping) throw fail(409, "El precio del envío cambió. Vuelve a elegir el tipo de envío.");
 
   const order = {
-    id: newOrderId(), key: newKey(), status: "pendiente", createdAt: Date.now(),
+    id: newOrderId(), key: newKey(), status: "pendiente", method: "mercadopago", createdAt: Date.now(),
     customer, lines: cart.lines.map(({ pkg, ...l }) => l), subtotal: cart.subtotal, shipping, total: cart.subtotal + shipping.price,
   };
   const proto = req.headers["x-forwarded-proto"] || (/^(localhost|127.0.0.1)(:|$)/.test(req.headers.host) ? "http" : "https");
-  const tx = await webpay("POST", "", { buy_order: order.id, session_id: order.id, amount: order.total, return_url: `${proto}://${req.headers.host}/api/webpay` });
-  order.token = tx.token;
+  const back = `${proto}://${req.headers.host}/api/mercadopago`;
+  const pref = await mercadopago("POST", "/checkout/preferences", {
+    items: [
+      ...order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
+      { id: "envio", title: `Envío Chilexpress (${shipping.name})`, quantity: 1, unit_price: shipping.price, currency_id: "CLP" },
+    ],
+    payer: { name: customer.name, email: customer.email },
+    external_reference: order.id,
+    back_urls: { success: back, failure: back, pending: back },
+    statement_descriptor: "DOS ANILLOS",
+    // Mercado Pago solo acepta estas dos opciones con direcciones https (no en localhost).
+    ...(proto === "https" && { auto_return: "approved", notification_url: back }),
+  });
+  order.preferenceId = pref.id;
   await orders.save(order);
-  await orders.linkToken(tx.token, order.id);
-  res.json({ url: tx.url, token: tx.token });
+  res.json({ url: (MP_TEST && pref.sandbox_init_point) || pref.init_point });
 });

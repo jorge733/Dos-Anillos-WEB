@@ -178,8 +178,8 @@ async function loadCommunes() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     communes = data.communes;
-    // Mientras Webpay esté en el ambiente de pruebas, se avisa que no hay cobros reales.
-    if (data.testMode) $("#checkout").prepend(Object.assign(document.createElement("p"), { className: "wide test-mode", textContent: "Modo de prueba: Webpay está en ambiente de integración y no se hacen cobros reales. Usa la tarjeta de prueba de Transbank." }));
+    // Mientras Mercado Pago use credenciales de prueba, se avisa que no hay cobros reales.
+    if (data.testMode) $("#checkout").prepend(Object.assign(document.createElement("p"), { className: "wide test-mode", textContent: "Modo de prueba: Mercado Pago usa credenciales de prueba y no se hacen cobros reales." }));
     const regions = [...new Set(communes.map(c => c.region))];
     $("#region").innerHTML = `<option value="">Elige tu región</option>` + regions.map(r => `<option>${esc(r)}</option>`).join("");
   } catch {
@@ -217,35 +217,34 @@ async function requote() {
 }
 $("#ship").addEventListener("change", e => { if (e.target.name === "service") { shipChoice = e.target.value; renderTotals(); } });
 
-// ---------- Pago con Webpay ----------
+// ---------- Pago con Mercado Pago ----------
 $("#checkout").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = $("#payBtn"), f = e.target;
-  btn.disabled = true; btn.textContent = "Conectando con Webpay…";
+  btn.disabled = true; btn.textContent = "Conectando con Mercado Pago…";
   try {
     const customer = Object.fromEntries(new FormData(f));
     delete customer.service;
     const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, customer, service: shipChoice }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
-    // Webpay pide llegar a su formulario con un POST que lleve el token.
-    const go = Object.assign(document.createElement("form"), { method: "POST", action: data.url });
-    go.append(Object.assign(document.createElement("input"), { type: "hidden", name: "token_ws", value: data.token }));
-    document.body.append(go); go.submit();
+    location.href = data.url;
   } catch (err) {
     toast(err.message || "No se pudo iniciar el pago. Intenta de nuevo.");
-    btn.disabled = false; btn.textContent = "Pagar con Webpay";
+    btn.textContent = "Pagar con Mercado Pago"; renderTotals();
     if (/envío/.test(err.message || "")) requote();
   }
 });
+// Si el cliente vuelve con el botón "atrás" del navegador, el botón de pago queda como al principio.
+addEventListener("pageshow", e => { if (e.persisted) { $("#payBtn").textContent = "Pagar con Mercado Pago"; renderTotals(); } });
 
 // Las comunas se piden recién cuando alguien abre el carrito.
 const onCart = () => location.hash === "#carrito" && cart.length && loadCommunes();
 addEventListener("hashchange", onCart);
 renderCart(); onCart();
 
-// ---------- Resultado del pago (vuelta desde Webpay) ----------
-const PAY_TYPES = { VD: "Débito", VP: "Prepago", VN: "Crédito", VC: "Crédito en cuotas", SI: "3 cuotas sin interés", S2: "2 cuotas sin interés", NC: "Cuotas sin interés" };
+// ---------- Resultado del pago (vuelta desde Mercado Pago) ----------
+const MP_TYPES = { credit_card: "Tarjeta de crédito", debit_card: "Tarjeta de débito", prepaid_card: "Tarjeta prepago", account_money: "Saldo de Mercado Pago", bank_transfer: "Transferencia", ticket: "Efectivo", digital_currency: "Mercado Crédito" };
 async function showOrder() {
   const q = new URLSearchParams(location.search), id = q.get("pedido");
   if (!id) return;
@@ -257,11 +256,15 @@ async function showOrder() {
     const r = await fetch(`/api/order?id=${encodeURIComponent(id)}&k=${encodeURIComponent(q.get("k") || "")}`);
     const o = await r.json();
     if (!r.ok) throw new Error(o.error);
-    if (o.status === "rechazado") return fail("El pago fue rechazado", `Webpay no aprobó el pago del pedido ${esc(o.id)}, así que no se hizo ningún cargo. Puedes intentarlo de nuevo con otra tarjeta.`);
+    const p = o.payment || {};
+    if (o.status === "rechazado") return fail("El pago fue rechazado", `Mercado Pago no aprobó el pago del pedido ${esc(o.id)}, así que no se hizo ningún cargo. Puedes intentarlo de nuevo con otra tarjeta.`);
     if (o.status === "anulado") return fail("El pago no se completó", `Se anuló el pago del pedido ${esc(o.id)} o se acabó el tiempo para pagar. No se hizo ningún cargo.`);
+    if (o.status === "pendiente" && ["pending", "in_process", "authorized"].includes(p.status)) {
+      cart = []; saveCart(); renderCart();
+      return fail("Tu pago está en proceso", `Mercado Pago todavía está revisando el pago del pedido ${esc(o.id)}. Cuando se apruebe te llegará el comprobante a ${esc(o.customer.email)}.`);
+    }
     if (o.status === "pendiente") return fail("No pudimos confirmar el pago", `Si se hizo un cargo en tu tarjeta, ${waHelp} con el número de pedido ${esc(o.id)} y lo revisamos.`);
     cart = []; saveCart(); renderCart();
-    const p = o.payment || {};
     box.innerHTML = `
       <p class="eyebrow">Pago aprobado</p>
       <h2>¡Gracias por tu compra, ${esc(o.customer.name.split(" ")[0])}!</h2>
@@ -270,10 +273,10 @@ async function showOrder() {
         <dt>Número de pedido</dt><dd>${esc(o.id)}</dd>
         <dt>Monto pagado</dt><dd>${clp(o.total)}</dd>
         <dt>Fecha</dt><dd>${new Date(p.transactionDate || o.createdAt).toLocaleString("es-CL")}</dd>
-        <dt>Código de autorización</dt><dd>${esc(p.authorizationCode)}</dd>
-        <dt>Tipo de pago</dt><dd>${esc(PAY_TYPES[p.paymentType] || p.paymentType)}</dd>
-        <dt>Cuotas</dt><dd>${p.installments || "Sin cuotas"}</dd>
-        <dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>
+        <dt>Pagado con</dt><dd>Mercado Pago</dd>
+        <dt>Nº de operación</dt><dd>${esc(p.operation)}</dd>
+        <dt>Medio de pago</dt><dd>${esc(MP_TYPES[p.paymentType] || p.paymentType)}</dd>
+        ${p.cardNumber ? `<dt>Cuotas</dt><dd>${p.installments > 1 ? p.installments : "Sin cuotas"}</dd><dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>` : ""}
       </dl>
       <ul class="cart-list">${o.lines.map(l => `<li><div><h3>${l.qty} × ${esc(l.name)}</h3></div><strong>${clp(l.price * l.qty)}</strong></li>`).join("")}
         <li><div><h3>Envío Chilexpress</h3><p class="muted">${esc(o.shipping.name)}</p></div><strong>${clp(o.shipping.price)}</strong></li></ul>

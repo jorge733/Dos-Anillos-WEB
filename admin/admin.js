@@ -230,7 +230,8 @@ function render() {
 // ---------- Pedidos ----------
 const PAID = ["pagado", "enviado", "entregado"];
 const STATUS = { pendiente: "Pago sin terminar", rechazado: "Pago rechazado", anulado: "Pago anulado", pagado: "Pagado · por enviar", enviado: "Enviado", entregado: "Entregado" };
-const PAY_TYPES = { VD: "Débito", VP: "Prepago", VN: "Crédito", VC: "Crédito en cuotas", SI: "3 cuotas sin interés", S2: "2 cuotas sin interés", NC: "Cuotas sin interés" };
+const MP_TYPES = { credit_card: "Tarjeta de crédito", debit_card: "Tarjeta de débito", prepaid_card: "Tarjeta prepago", account_money: "Saldo de Mercado Pago", bank_transfer: "Transferencia", ticket: "Efectivo", digital_currency: "Mercado Crédito" };
+const payText = p => ["Mercado Pago", `${MP_TYPES[p.paymentType] || p.paymentType}${p.installments > 1 ? ` · ${p.installments} cuotas` : ""}${p.cardNumber ? ` · tarjeta **** ${p.cardNumber}` : ""} · operación ${p.operation}`];
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
 const when = t => new Date(t).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" });
 let showAll = false;
@@ -269,7 +270,7 @@ function orderCard(o) {
       ...o.lines.map(l => h("li", {}, h("span", { textContent: `${l.qty} × ${l.name}` }), h("span", { textContent: clp(l.price * l.qty) }))),
       h("li", {}, h("span", { textContent: `Envío Chilexpress · ${o.shipping.name}` }), h("span", { textContent: clp(o.shipping.price) })),
       h("li", { className: "sum" }, h("span", { textContent: "Total" }), h("span", { textContent: clp(o.total) }))),
-    p.authorizationCode ? dl(["Webpay", `${PAY_TYPES[p.paymentType] || p.paymentType}${p.installments ? ` · ${p.installments} cuotas` : ""} · tarjeta **** ${p.cardNumber} · autorización ${p.authorizationCode}`]) : null);
+    p.operation ? dl(payText(p)) : null);
 
   if (PAID.includes(o.status)) {
     const status = h("select", {}, ...PAID.map(s => h("option", { value: s, textContent: STATUS[s], selected: s === o.status })));

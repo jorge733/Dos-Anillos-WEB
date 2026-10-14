@@ -12,6 +12,6 @@ module.exports = handle(async (req, res) => {
   res.json({
     id: o.id, status: o.status, createdAt: o.createdAt, lines: o.lines, shipping: o.shipping, total: o.total,
     customer: { name: o.customer.name, email: o.customer.email },
-    payment: o.payment && { authorizationCode: o.payment.authorizationCode, cardNumber: o.payment.cardNumber, paymentType: o.payment.paymentType, installments: o.payment.installments, transactionDate: o.payment.transactionDate },
+    payment: o.payment && { status: o.payment.status, operation: o.payment.operation, cardNumber: o.payment.cardNumber, paymentType: o.payment.paymentType, installments: o.payment.installments, transactionDate: o.payment.transactionDate },
   });
 });

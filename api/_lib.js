@@ -1,4 +1,4 @@
-// Piezas compartidas por las funciones de la tienda: contenido, base de datos, Chilexpress, Webpay y correos.
+// Piezas compartidas por las funciones de la tienda: contenido, base de datos, Chilexpress, Mercado Pago y correos.
 // Los archivos de api/ que empiezan con "_" no son direcciones públicas: solo se importan desde las otras funciones.
 //
 // Variables de entorno (Vercel → Settings → Environment Variables):
@@ -6,8 +6,7 @@
 //   CHILEXPRESS_COVERAGE_KEY                 llave de la API "Cobertura" de Chilexpress
 //   CHILEXPRESS_RATING_KEY                   llave de la API "Cotizador" de Chilexpress
 //   CHILEXPRESS_ENV                          "production" para usar el ambiente real (por defecto, el de pruebas)
-//   TRANSBANK_ENV                            "production" para cobrar de verdad (por defecto, el ambiente de integración)
-//   TRANSBANK_COMMERCE_CODE / TRANSBANK_API_KEY   credenciales de producción de Webpay Plus
+//   MERCADOPAGO_ACCESS_TOKEN                 Access Token de Mercado Pago (de producción para cobrar de verdad)
 //   RESEND_API_KEY                           llave de Resend para enviar correos
 //   MAIL_FROM                                remitente verificado en Resend, ej.: Dos Anillos <pedidos@dosanillos.cl>
 const fs = require("fs");
@@ -66,12 +65,11 @@ const orders = {
     if (!ids.length) return [];
     return (await redis("MGET", ...ids.map(id => `order:${id}`))).filter(Boolean).map(s => JSON.parse(s));
   },
-  // Webpay devuelve al cliente solo con el token; esto permite encontrar su pedido.
-  linkToken: (token, id) => redis("SET", `tbk:${token}`, id, "EX", 7 * 24 * 3600),
-  async byToken(token) { const id = token && await redis("GET", `tbk:${token}`); return id && orders.get(id); },
+  // La vuelta del cliente y el aviso de Mercado Pago pueden llegar al mismo tiempo: solo el primero manda los correos.
+  claimPaid: async id => (await redis("SET", `paid:${id}`, "1", "NX", "EX", 90 * 24 * 3600)) === "OK",
 };
 
-// Número de pedido corto (Webpay acepta hasta 26 caracteres, sin símbolos raros).
+// Número de pedido corto y sin símbolos raros (va a Mercado Pago como referencia).
 const newOrderId = () => "DA" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString("hex").toUpperCase();
 const newKey = () => crypto.randomBytes(16).toString("hex");
 
@@ -144,24 +142,45 @@ async function quote(county, cart, c = content()) {
   return options;
 }
 
-// ---------- Webpay Plus (Transbank) ----------
-const TBK_PROD = env("TRANSBANK_ENV") === "production";
-const TBK_BASE = (TBK_PROD ? "https://webpay3g.transbank.cl" : "https://webpay3gint.transbank.cl") + "/rswebpaytransaction/api/webpay/v1.2/transactions";
-// Credenciales públicas del ambiente de integración, publicadas por Transbank para hacer pruebas.
-const TBK_CODE = TBK_PROD ? env("TRANSBANK_COMMERCE_CODE") : "597055555532";
-const TBK_KEY = TBK_PROD ? env("TRANSBANK_API_KEY") : "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C";
+// ---------- Mercado Pago (Checkout Pro) ----------
+// Las credenciales de prueba de Mercado Pago empiezan con "TEST-"; con ellas no se cobra de verdad.
+const MP_TOKEN = env("MERCADOPAGO_ACCESS_TOKEN");
+const MP_TEST = MP_TOKEN.startsWith("TEST-");
+const PAID = ["pagado", "enviado", "entregado"];
 
-async function webpay(method, suffix = "", body) {
-  if (!TBK_CODE || !TBK_KEY) throw fail(500, "Falta configurar TRANSBANK_COMMERCE_CODE o TRANSBANK_API_KEY en Vercel.");
-  const r = await fetch(TBK_BASE + suffix, {
+async function mercadopago(method, pathname, body) {
+  if (!MP_TOKEN) throw fail(500, "Falta configurar MERCADOPAGO_ACCESS_TOKEN en Vercel.");
+  const r = await fetch("https://api.mercadopago.com" + pathname, {
     method,
-    headers: { "Tbk-Api-Key-Id": TBK_CODE, "Tbk-Api-Key-Secret": TBK_KEY, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${MP_TOKEN}`, "Content-Type": "application/json" },
     body: body && JSON.stringify(body),
     signal: AbortSignal.timeout(20000),
   });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw fail(502, `Webpay respondió ${r.status}${data.error_message ? `: ${data.error_message}` : ""}.`);
+  if (!r.ok) throw fail(502, `Mercado Pago respondió ${r.status}${data.message ? `: ${data.message}` : ""}.`);
   return data;
+}
+
+// Aplica a su pedido lo que dice Mercado Pago de un pago. Se usa al volver el cliente y en cada aviso (webhook).
+// Siempre se consulta el pago a Mercado Pago, así un aviso falso no puede marcar nada como pagado.
+// Un pedido pagado nunca retrocede; uno rechazado o anulado sí puede quedar pagado, porque en Mercado Pago
+// el cliente puede reintentar con otro medio de pago.
+async function applyMercadoPago(paymentId) {
+  const r = await mercadopago("GET", `/v1/payments/${encodeURIComponent(paymentId)}`);
+  const order = r.external_reference && await orders.get(r.external_reference);
+  if (!order || PAID.includes(order.status)) return order;
+  const ok = r.status === "approved" && r.currency_id === "CLP" && Number(r.transaction_amount) === order.total;
+  const next = ok ? "pagado" : { rejected: "rechazado", cancelled: "anulado" }[r.status];
+  order.payment = {
+    status: r.status, statusDetail: r.status_detail, operation: String(r.id),
+    method: r.payment_method_id, paymentType: r.payment_type_id, installments: r.installments || 0,
+    cardNumber: r.card?.last_four_digits, transactionDate: r.date_approved || r.date_created, amount: r.transaction_amount,
+  };
+  if (ok || (next && order.status === "pendiente")) order.status = next;
+  if (ok) order.paidAt = Date.now();
+  await orders.save(order);
+  if (ok && await orders.claimPaid(order.id)) await notifyPaid(order).catch(e => console.error("Correos", e));
+  return order;
 }
 
 // ---------- Correos (Resend) ----------
@@ -191,7 +210,7 @@ function orderHtml(o, intro) {
       ${row("Total pagado", clp(o.total), true)}
     </table>
     <p style="margin-top:18px"><strong>Envío a:</strong><br>${esc(c.name)}<br>${esc(c.address)}<br>${esc(c.countyName)}, ${esc(c.region)}<br>${esc(c.phone)} · ${esc(c.email)}${c.notes ? `<br><em>${esc(c.notes)}</em>` : ""}</p>
-    ${o.payment ? `<p style="color:#7a7366;font-size:13px">Webpay · código de autorización ${esc(o.payment.authorizationCode)} · tarjeta terminada en ${esc(o.payment.cardNumber)}</p>` : ""}
+    ${o.payment ? `<p style="color:#7a7366;font-size:13px">Mercado Pago · operación ${esc(o.payment.operation)}${o.payment.cardNumber ? ` · tarjeta terminada en ${esc(o.payment.cardNumber)}` : ""}</p>` : ""}
   </div>`;
 }
 
@@ -201,8 +220,8 @@ async function notifyPaid(o) {
   const owners = String(c.general.orderEmails || c.general.email).split(/[,;\s]+/).filter(Boolean);
   await Promise.all([
     mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, `Hola ${esc(o.customer.name)}, ¡gracias por tu compra! Te avisaremos cuando despachemos tu pedido.`), c.general.email),
-    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, "Llegó un pedido pagado por Webpay. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente."), o.customer.email),
+    owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, "Llegó un pedido pagado por Mercado Pago. Los datos también están en dosanillos.cl/admin. Si respondes este correo, le escribes al cliente."), o.customer.email),
   ]);
 }
 
-module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, webpay, notifyPaid, TBK_PROD };
+module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, communes, quote, mercadopago, applyMercadoPago, notifyPaid, MP_TEST };

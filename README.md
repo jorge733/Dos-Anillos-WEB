@@ -17,11 +17,11 @@ Configuración (una sola vez):
    - Opcionales: `GITHUB_REPO` (por defecto `jorge733/Dos-Anillos-WEB`) y `GITHUB_BRANCH` (por defecto `main`).
 3. Vuelve a publicar (*Deployments → Redeploy*) para que tome las variables.
 
-## Tienda: carrito, Webpay y envíos con Chilexpress
+## Tienda: carrito, Mercado Pago y envíos con Chilexpress
 
-El cliente arma su carrito, elige región y comuna, y Chilexpress cotiza el envío según el peso y las medidas del paquete (se configuran por producto en `/admin`). Paga con Webpay Plus. Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
+El cliente arma su carrito, elige región y comuna, y Chilexpress cotiza el envío según el peso y las medidas del paquete (se configuran por producto en `/admin`). Paga con Mercado Pago (Checkout Pro). Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
 
-Funciones: `api/shipping.js` (comunas y cotización), `api/checkout.js` (crea el pedido y el pago), `api/webpay.js` (vuelta desde Webpay), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios y el envío siempre se recalculan en el servidor.
+Funciones: `api/shipping.js` (comunas y cotización), `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios y el envío siempre se recalculan en el servidor.
 
 Variables de entorno en Vercel:
 
@@ -31,8 +31,14 @@ Variables de entorno en Vercel:
 | `CHILEXPRESS_COVERAGE_KEY`, `CHILEXPRESS_RATING_KEY` | Llaves de las APIs *Cobertura* y *Cotizador* del portal developers.wschilexpress.com. |
 | `CHILEXPRESS_ENV` | `production` para usar el ambiente real de Chilexpress (por defecto, el de pruebas). |
 | `RESEND_API_KEY`, `MAIL_FROM` | Correos con Resend. `MAIL_FROM` debe usar un dominio verificado en Resend, ej.: `Dos Anillos <pedidos@dosanillos.cl>`. |
-| `TRANSBANK_ENV`, `TRANSBANK_COMMERCE_CODE`, `TRANSBANK_API_KEY` | Webpay en producción. Sin `TRANSBANK_ENV=production` se usa el ambiente de integración de Transbank, que no cobra y muestra un aviso de «modo de prueba» en el carrito. |
+| `MERCADOPAGO_ACCESS_TOKEN` | *Access Token* de Mercado Pago. Si empieza con `TEST-` (credenciales de prueba), no cobra y el carrito muestra el aviso de «modo de prueba». |
 
 En `/admin` → *Datos generales* hay que elegir la comuna desde donde se despacha y los correos que reciben el aviso de cada venta.
 
-Tarjeta de prueba de Transbank (ambiente de integración): VISA 4051 8856 0044 6623, CVV 123, cualquier fecha futura; en el banco de prueba, RUT 11.111.111-1 y clave 123.
+### Mercado Pago
+
+1. Entra a [mercadopago.cl/developers/panel](https://www.mercadopago.cl/developers/panel) con la cuenta de Mercado Pago del negocio y crea una aplicación (producto: *Checkout Pro*, pagos online).
+2. En la aplicación, copia el *Access Token* de **Credenciales de prueba** (empieza con `TEST-`) y guárdalo en Vercel como `MERCADOPAGO_ACCESS_TOKEN`. Vuelve a publicar y prueba una compra con las [tarjetas de prueba de Mercado Pago](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
+3. Cuando funcione, cambia la variable por el *Access Token* de **Credenciales de producción** (empieza con `APP_USR-`) y vuelve a publicar.
+
+No hace falta configurar webhooks en el panel: cada pago le indica a Mercado Pago que avise a `https://dosanillos.cl/api/mercadopago`. Así el pedido queda pagado aunque el cliente cierre la ventana antes de volver a la tienda, o si el pago se aprueba más tarde.
