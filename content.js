@@ -86,8 +86,8 @@ window.CONTENT = {
     ]
   },
   "maderas": {
-    "eyebrow": "Maderas que Empleamos",
-    "title": "Cada madera, una voz única",
+    "eyebrow": "Luz del cosmos hecha madera, sol que duerme en el madero:  fuerza viva de la tierra, espíritu en su sendero.",
+    "title": "Maderas que Empleamos",
     "woods": [
       {
         "name": "Cerezo",
