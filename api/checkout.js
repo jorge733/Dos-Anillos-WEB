@@ -1,8 +1,8 @@
 // GET  /api/checkout                          → { testMode }: si Mercado Pago usa credenciales de prueba
 // POST /api/checkout { items, customer }      → crea el pedido y la preferencia de pago en Mercado Pago.
-// El navegador recibe { url } y lleva al cliente a pagar ahí. El envío no se cobra: se coordina después con el vendedor.
+// El navegador recibe { url } y lleva al cliente a pagar ahí. El envío se cobra según la región (o queda por coordinar con el vendedor).
 // Los precios se vuelven a calcular aquí: nunca se usa lo que diga el navegador.
-const { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, MP_TEST } = require("./_lib");
+const { fail, handle, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, MP_TEST } = require("./_lib");
 
 const clean = (s, max) => String(s ?? "").trim().slice(0, max);
 
@@ -17,15 +17,20 @@ module.exports = handle(async (req, res) => {
   if (!customer.name || !customer.phone || !customer.address || !customer.comuna || !customer.region) throw fail(400, "Completa nombre, teléfono, región, comuna y dirección.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) throw fail(400, "Revisa tu correo.");
 
-  const cart = priceCart(items, content());
+  const c = content();
+  const cart = priceCart(items, c);
+  const shipping = quoteShipping(cart.lines, customer.region, c);
   const order = {
     id: newOrderId(), key: newKey(), status: "pendiente", method: "mercadopago", createdAt: Date.now(),
-    customer, lines: cart.lines, subtotal: cart.subtotal, shipping: { code: "coordinar", name: "Por coordinar con el vendedor", price: 0 }, total: cart.subtotal,
+    customer, lines: cart.lines, subtotal: cart.subtotal, shipping, total: cart.subtotal + shipping.price,
   };
   const proto = req.headers["x-forwarded-proto"] || (/^(localhost|127.0.0.1)(:|$)/.test(req.headers.host) ? "http" : "https");
   const back = `${proto}://${req.headers.host}/api/mercadopago`;
   const pref = await mercadopago("POST", "/checkout/preferences", {
-    items: order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
+    items: [
+      ...order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
+      ...(shipping.price ? [{ id: "envio", title: shipping.name, quantity: 1, unit_price: shipping.price, currency_id: "CLP" }] : []),
+    ],
     payer: { name: customer.name, email: customer.email },
     external_reference: order.id,
     back_urls: { success: back, failure: back, pending: back },

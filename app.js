@@ -146,10 +146,32 @@ function renderCart() {
   renderTotals();
 }
 
-// El envío no se cobra en la tienda: se coordina con el vendedor después de la compra y se paga aparte.
+// ---------- Envío ----------
+// Mismo cálculo que el servidor (api/_lib.js → quoteShipping): el precio de la región (/admin → Envíos)
+// más un recargo por cada producto adicional. Devuelve null si queda por coordinar: algún producto
+// tiene envío especial (grande o pesado) o la región todavía no tiene precio.
+const regions = C.envios?.regions || [];
+const special = () => cart.some(i => product(i.id).shipping === "coordinar");
+function quoteShipping(region) {
+  const rate = regions.find(r => r.name === region)?.price;
+  if (special() || rate == null || rate === "") return null;
+  const units = cart.reduce((s, i) => s + i.qty, 0);
+  return Math.round(Number(rate) + Number(C.envios.extra || 0) * (units - 1));
+}
+const regionSelect = $("#checkout").elements.region;
+regionSelect.append(...regions.map(r => new Option(r.name)));
+regionSelect.addEventListener("change", renderTotals);
+
 function renderTotals() {
-  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>Por coordinar</dd>
-    <dt class="total">Total</dt><dd class="total">${clp(subtotal())}</dd>`;
+  const region = regionSelect.value, ship = region ? quoteShipping(region) : null;
+  const shipText = !region && !special() ? "Elige tu región" : ship == null ? "Por coordinar" : ship ? clp(ship) : "Gratis";
+  $("#totals").innerHTML = `<dt>Subtotal</dt><dd>${clp(subtotal())}</dd><dt>Envío</dt><dd>${shipText}</dd>
+    <dt class="total">Total</dt><dd class="total">${clp(subtotal() + (ship || 0))}</dd>`;
+  $("#shipNote").textContent = special()
+    ? "Tu pedido incluye productos de envío especial por su tamaño o peso: después de tu compra te escribimos para coordinar el envío, que se paga aparte."
+    : !region ? "El costo del envío depende de tu región."
+    : ship == null ? "Todavía no tenemos una tarifa fija para tu región: después de tu compra te escribimos para coordinar el envío, que se paga aparte."
+    : "El envío a tu dirección ya va incluido en el total. Cuando despachemos tu pedido te enviaremos el número de seguimiento.";
   $("#payBtn").disabled = !cart.length;
 }
 
@@ -222,10 +244,11 @@ async function showOrder() {
     }
     if (o.status === "pendiente") return fail("No pudimos confirmar el pago", `Si se hizo un cargo en tu tarjeta, ${waHelp} con el número de pedido ${esc(o.id)} y lo revisamos.`);
     cart = []; saveCart(); renderCart();
+    const shipPaid = o.shipping?.code === "region";
     box.innerHTML = `
       <p class="eyebrow">Pago aprobado</p>
       <h2>¡Gracias por tu compra, ${esc(o.customer.name.split(" ")[0])}!</h2>
-      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. Te escribiremos para acordar el costo del envío, que se paga aparte.</p>
+      <p class="muted">Te enviamos el comprobante a ${esc(o.customer.email)}. ${shipPaid ? "Cuando despachemos tu pedido te enviaremos el número de seguimiento." : "Te escribiremos para acordar el costo del envío, que se paga aparte."}</p>
       <dl class="voucher">
         <dt>Número de pedido</dt><dd>${esc(o.id)}</dd>
         <dt>Monto pagado</dt><dd>${clp(o.total)}</dd>
@@ -236,7 +259,7 @@ async function showOrder() {
         ${p.cardNumber ? `<dt>Cuotas</dt><dd>${p.installments > 1 ? p.installments : "Sin cuotas"}</dd><dt>Tarjeta</dt><dd>**** ${esc(p.cardNumber)}</dd>` : ""}
       </dl>
       <ul class="cart-list">${o.lines.map(l => `<li><div><h3>${l.qty} × ${esc(l.name)}</h3></div><strong>${clp(l.price * l.qty)}</strong></li>`).join("")}
-        <li><div><h3>Envío</h3><p class="muted">Se coordina contigo y se paga aparte</p></div><strong>Por coordinar</strong></li></ul>
+        <li><div><h3>Envío</h3><p class="muted">${shipPaid ? esc(o.shipping.name) : "Se coordina contigo y se paga aparte"}</p></div><strong>${shipPaid ? (o.shipping.price ? clp(o.shipping.price) : "Gratis") : "Por coordinar"}</strong></li></ul>
       <a class="btn" href="#inicio">Volver al inicio</a>`;
   } catch { fail("No encontramos tu pedido", `Si pagaste y no ves tu comprobante, ${waHelp} y te ayudamos.`); }
 }

@@ -19,7 +19,18 @@ Configuración (una sola vez):
 
 ## Tienda: carrito y Mercado Pago
 
-El cliente arma su carrito, deja sus datos de envío y paga los productos con Mercado Pago (Checkout Pro). El envío no se cobra en la tienda: después de la compra el vendedor le escribe para coordinarlo, y se paga aparte. Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
+El cliente arma su carrito, deja sus datos de envío y paga los productos y el envío con Mercado Pago (Checkout Pro). Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
+
+### Envío
+
+En `/admin` → *Envíos* se pone el precio del envío para cada región (lo que cuesta mandar un pedido con un producto) y un recargo opcional por cada producto adicional del mismo pedido. El carrito muestra el costo apenas el cliente elige su región, y se cobra junto con los productos.
+
+Cada producto (`/admin` → *Catálogo*) tiene la opción **Envío**:
+
+- **Automático**: se cobra según la tabla de regiones. Es lo normal para las flautas y los accesorios.
+- **Se calcula después del pago**: para productos grandes o pesados (kanteles, tablas). Si el pedido trae uno de estos, el envío completo queda por coordinar: el vendedor le escribe al cliente y se paga aparte.
+
+Una región sin precio también queda por coordinar.
 
 Funciones: `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios siempre se recalculan en el servidor.
 

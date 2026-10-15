@@ -163,11 +163,11 @@
     <label>Nombre y apellido<input name="name" required autocomplete="name"></label>
     <label>Correo<input name="email" type="email" required autocomplete="email"></label>
     <label>Teléfono<input name="phone" type="tel" required autocomplete="tel"></label>
-    <label>Región<select name="region" required><option value="">Elige tu región</option><option>Arica y Parinacota</option><option>Tarapacá</option><option>Antofagasta</option><option>Atacama</option><option>Coquimbo</option><option>Valparaíso</option><option>Metropolitana de Santiago</option><option>Libertador General Bernardo O'Higgins</option><option>Maule</option><option>Ñuble</option><option>Biobío</option><option>La Araucanía</option><option>Los Ríos</option><option>Los Lagos</option><option>Aysén del General Carlos Ibáñez del Campo</option><option>Magallanes y de la Antártica Chilena</option></select></label>
+    <label>Región<select name="region" required><option value="">Elige tu región</option></select></label>
     <label>Comuna<input name="comuna" required autocomplete="address-level2"></label>
     <label>Dirección<input name="address" required autocomplete="street-address" placeholder="Calle, número, depto."></label>
     <label class="wide">Notas para el envío (opcional)<textarea name="notes" rows="2"></textarea></label>
-    <p class="wide small muted">El costo del envío no se cobra aquí: después de tu compra te escribimos para coordinarlo, y se paga aparte.</p>
+    <p class="wide small muted" id="shipNote"></p>
     <dl class="wide totals" id="totals"></dl>
     <button class="btn" type="submit" id="payBtn" disabled>Pagar con Mercado Pago</button>
     <p class="wide small muted">Te llevaremos a Mercado Pago para pagar con tarjeta de débito, crédito o prepago, o con tu cuenta de Mercado Pago.</p>

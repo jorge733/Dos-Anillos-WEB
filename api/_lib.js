@@ -43,6 +43,17 @@ function priceCart(items, c = content()) {
   return { lines, subtotal: lines.reduce((s, l) => s + l.price * l.qty, 0) };
 }
 
+// Costo del envío según la región (tabla de /admin → Envíos). Es el mismo cálculo que muestra el carrito (app.js).
+// Queda «por coordinar» si algún producto tiene envío especial o si la región todavía no tiene precio.
+function quoteShipping(lines, region, c = content()) {
+  const env = c.envios || {};
+  const rate = (env.regions || []).find(r => r.name === region)?.price;
+  const special = lines.some(l => c.productos.products.find(p => p.id === l.id)?.shipping === "coordinar");
+  if (special || rate == null || rate === "") return { code: "coordinar", name: "Por coordinar con el vendedor", price: 0 };
+  const units = lines.reduce((s, l) => s + l.qty, 0);
+  return { code: "region", name: `Envío a ${region}`, price: Math.round(Number(rate) + Number(env.extra || 0) * (units - 1)) };
+}
+
 // ---------- Base de datos (Upstash Redis por REST) ----------
 async function redis(...cmd) {
   const url = env("KV_REST_API_URL") || env("UPSTASH_REDIS_REST_URL");
@@ -141,7 +152,11 @@ const waUrl = (phone, text) => `https://wa.me/${waNumber(phone)}?text=${encodeUR
 const btn = (href, text, dark = true) => `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 10px 0;padding:13px 24px;background:${dark ? K.charcoal : "transparent"};border:1px solid ${K.charcoal};color:${dark ? K.paper : K.charcoal};font-family:${SANS};font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none">${text}</a>`;
 const label = text => `<p style="margin:0 0 10px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${K.muted}">${text}</p>`;
 
-function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "", shipLabel = "Por coordinar" }) {
+// Envío ya cobrado en la tienda, o que se coordina y paga aparte (pedidos antiguos o con productos de envío especial).
+const shipPaid = o => o.shipping?.code === "region";
+const shipText = (o, pending = "Por coordinar") => shipPaid(o) ? (o.shipping.price ? clp(o.shipping.price) : "Gratis") : pending;
+
+function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "", shipLabel = shipText(o) }) {
   const c = o.customer, products = content().productos.products;
   const when = new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "short" });
   const line = l => {
@@ -208,11 +223,13 @@ async function notifyPaid(o) {
   const first = esc(o.customer.name.split(" ")[0]);
   await Promise.all([
     mail([o.customer.email], `Recibimos tu pago · pedido ${o.id}`, orderHtml(o, {
-      preheader: `Pagaste ${clp(o.total)}. Te escribiremos para coordinar el envío.`,
+      preheader: `Pagaste ${clp(o.total)}. ${shipPaid(o) ? "Te avisaremos cuando despachemos tu pedido." : "Te escribiremos para coordinar el envío."}`,
       eyebrow: "Pago aprobado",
       title: `¡Gracias por tu compra, ${first}!`,
       intro: "Recibimos tu pago y ya estamos preparando tu pedido. Cada pieza está hecha a mano en nuestro taller.",
-      callout: `<strong>El envío se coordina aparte.</strong> Te escribiremos por WhatsApp o por correo para acordar el costo del envío, que se paga por separado.`,
+      callout: shipPaid(o)
+        ? `<strong>El envío ya está pagado.</strong> Cuando despachemos tu pedido te llegará un correo con la empresa y el número de seguimiento.`
+        : `<strong>El envío se coordina aparte.</strong> Te escribiremos por WhatsApp o por correo para acordar el costo del envío, que se paga por separado.`,
       actions: c.general.whatsapp ? btn(waUrl(c.general.whatsapp, `Hola, tengo una consulta sobre mi pedido ${o.id}`), "Escríbenos por WhatsApp") : "",
     }), c.general.email),
     owners.length && mail(owners, `Nueva venta: ${clp(o.total)} · ${o.customer.name}`, orderHtml(o, {
@@ -220,8 +237,10 @@ async function notifyPaid(o) {
       eyebrow: "Nueva venta",
       title: `${clp(o.total)} · ${esc(o.customer.name)}`,
       intro: "Llegó un pedido pagado con Mercado Pago. Si respondes este correo, le escribes directamente al cliente.",
-      callout: `<strong>Falta coordinar el envío.</strong> Escríbele al cliente para acordar el costo y la forma de despacho.`,
-      actions: btn(waUrl(o.customer.phone, `Hola ${o.customer.name.split(" ")[0]}, te escribimos de Dos Anillos por tu pedido ${o.id}. Coordinemos el envío:`), "WhatsApp al cliente") + btn(`${SITE}/admin`, "Ver en el panel", false),
+      callout: shipPaid(o)
+        ? `<strong>Envío cobrado en la tienda: ${shipText(o)}.</strong> Despacha el pedido y márcalo como «Enviado» en el panel con la empresa y el número de seguimiento.`
+        : `<strong>Falta coordinar el envío.</strong> Escríbele al cliente para acordar el costo y la forma de despacho.`,
+      actions: btn(waUrl(o.customer.phone, `Hola ${o.customer.name.split(" ")[0]}, te escribimos de Dos Anillos por tu pedido ${o.id}.${shipPaid(o) ? "" : " Coordinemos el envío:"}`), "WhatsApp al cliente") + btn(`${SITE}/admin`, "Ver en el panel", false),
     }), o.customer.email),
   ]);
 }
@@ -239,8 +258,8 @@ async function notifyShipped(o) {
     intro: "Ya despachamos tu pedido. Esperamos que lo disfrutes tanto como disfrutamos haciéndolo.",
     callout: data.length ? `<strong>Datos del envío</strong><br>${data.join("<br>")}` : "Si tienes dudas sobre la entrega, escríbenos y te ayudamos.",
     actions: c.general.whatsapp ? btn(waUrl(c.general.whatsapp, `Hola, tengo una consulta sobre el envío de mi pedido ${o.id}`), "¿Dudas? Escríbenos") : "",
-    shipLabel: "Coordinado aparte",
+    shipLabel: shipText(o, "Coordinado aparte"),
   }), c.general.email);
 }
 
-module.exports = { fail, handle, content, priceCart, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };
+module.exports = { fail, handle, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };

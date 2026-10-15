@@ -24,16 +24,26 @@ const TABS = [
   ] },
   { key: "productos", title: "Catálogo", fields: [...head,
     { k: "products", label: "Productos a la venta", type: "list", noun: "producto", name: p => p.name,
-      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, imgs: [], desc: "", specs: [] }),
+      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, shipping: "auto", imgs: [], desc: "", specs: [] }),
       fields: [
         { k: "name", label: "Nombre" },
         { k: "price", label: "Precio (CLP)", type: "number", step: 500 },
+        { k: "shipping", label: "Envío", type: "select", options: [
+            ["auto", "Automático: se cobra según la región (pestaña Envíos)"],
+            ["coordinar", "Se calcula después del pago (productos grandes o pesados)"]],
+          hint: "Si un pedido trae algún producto con envío «después del pago», todo el envío de ese pedido queda por coordinar con el cliente." },
         { k: "imgs", label: "Fotos", type: "gallery", hint: "La primera es la principal. Usa las flechas para ordenarlas." },
         { k: "desc", label: "Descripción", type: "textarea", hint: MD },
         { k: "specs", label: "Características", type: "list", noun: "característica", name: s => s.label, row: true,
           blank: () => ({ label: "", value: "" }),
           fields: [{ k: "label", label: "Nombre (ej.: Madera)" }, { k: "value", label: "Valor (ej.: Cerezo)" }] },
       ] },
+  ] },
+  { key: "envios", title: "Envíos", fields: [
+    { k: "regions", label: "Precio del envío por región (CLP)", type: "rates",
+      hint: "Es lo que se cobra por un pedido con un producto. Deja vacía una región para coordinar el envío con el cliente después del pago; pon 0 para envío gratis." },
+    { k: "extra", label: "Recargo por cada producto adicional (CLP)", type: "number", step: 100,
+      hint: "Se suma por cada producto más en el mismo pedido. Ej.: con 4.000 de región y 1.000 de recargo, 3 flautas pagan 6.000 de envío." },
   ] },
   { key: "maderas", title: "Maderas", fields: [...head,
     { k: "woods", label: "Maderas", type: "list", noun: "madera", name: w => w.name,
@@ -148,6 +158,15 @@ function field(f, obj, rerender) {
       return h("label", {}, f.label, h("textarea", { value: v ?? "", rows: f.rows || 4, oninput: e => set(e.target.value) }), hint);
     case "number":
       return h("label", {}, f.label, h("input", { type: "number", min: 0, step: f.step || 1, value: v ?? 0, oninput: e => set(Number(e.target.value) || 0) }), hint);
+    case "select":
+      return h("label", {}, f.label, h("select", { onchange: e => set(e.target.value) },
+        ...f.options.map(([value, text]) => h("option", { value, textContent: text, selected: value === (v ?? f.options[0][0]) }))), hint);
+    // Una fila por región; vacío = sin tarifa (el envío se coordina después).
+    case "rates":
+      return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
+        h("div", { className: "rates" }, ...v.map(r => h("label", {}, r.name,
+          h("input", { type: "number", min: 0, step: 100, value: r.price ?? "", placeholder: "Por coordinar",
+            oninput: e => { r.price = e.target.value === "" ? null : Math.max(0, Number(e.target.value) || 0); touch(); } })))));
     case "group":
       if (!v) obj[f.k] = {};
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
@@ -251,7 +270,8 @@ function orderCard(o) {
        ["Notas", c.notes]),
     h("ul", { className: "lines" },
       ...o.lines.map(l => h("li", {}, h("span", { textContent: `${l.qty} × ${l.name}` }), h("span", { textContent: clp(l.price * l.qty) }))),
-      h("li", {}, h("span", { textContent: "Envío" }), h("span", { textContent: "Por coordinar con el cliente" })),
+      h("li", {}, h("span", { textContent: o.shipping?.code === "region" ? o.shipping.name : "Envío" }),
+        h("span", { textContent: o.shipping?.code === "region" ? (o.shipping.price ? clp(o.shipping.price) : "Gratis") : "Por coordinar con el cliente" })),
       h("li", { className: "sum" }, h("span", { textContent: "Total" }), h("span", { textContent: clp(o.total) }))),
     p.operation ? dl(payText(p)) : null);
 

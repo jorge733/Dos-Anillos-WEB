@@ -49,7 +49,8 @@ window.CONTENT = {
             "label": "Incluye",
             "value": "Estuche Y Limpiador"
           }
-        ]
+        ],
+        "shipping": "auto"
       },
       {
         "id": "limpiador-repuesto",
@@ -65,7 +66,8 @@ window.CONTENT = {
             "label": "Flauta compatible ",
             "value": "Pentatónica en La 432 Hz"
           }
-        ]
+        ],
+        "shipping": "auto"
       },
       {
         "id": "pmv8szeyk",
@@ -81,7 +83,77 @@ window.CONTENT = {
             "label": "Tela ",
             "value": "Crea 100% Algodón"
           }
-        ]
+        ],
+        "shipping": "auto"
+      }
+    ]
+  },
+  "envios": {
+    "extra": 0,
+    "regions": [
+      {
+        "name": "Arica y Parinacota",
+        "price": null
+      },
+      {
+        "name": "Tarapacá",
+        "price": null
+      },
+      {
+        "name": "Antofagasta",
+        "price": null
+      },
+      {
+        "name": "Atacama",
+        "price": null
+      },
+      {
+        "name": "Coquimbo",
+        "price": null
+      },
+      {
+        "name": "Valparaíso",
+        "price": null
+      },
+      {
+        "name": "Metropolitana de Santiago",
+        "price": null
+      },
+      {
+        "name": "Libertador General Bernardo O'Higgins",
+        "price": null
+      },
+      {
+        "name": "Maule",
+        "price": null
+      },
+      {
+        "name": "Ñuble",
+        "price": null
+      },
+      {
+        "name": "Biobío",
+        "price": null
+      },
+      {
+        "name": "La Araucanía",
+        "price": null
+      },
+      {
+        "name": "Los Ríos",
+        "price": null
+      },
+      {
+        "name": "Los Lagos",
+        "price": null
+      },
+      {
+        "name": "Aysén del General Carlos Ibáñez del Campo",
+        "price": null
+      },
+      {
+        "name": "Magallanes y de la Antártica Chilena",
+        "price": null
       }
     ]
   },
