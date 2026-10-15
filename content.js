@@ -27,7 +27,9 @@ window.CONTENT = {
           "img/subida-mv7fln96-ivak.webp",
           "img/subida-mv7fgaam-2ioc.webp",
           "img/subida-mv7fhy1l-jlth.webp",
-          "img/subida-mv7fl2rw-0iz7.webp"
+          "img/subida-mv7fl2rw-0iz7.webp",
+          "img/subida-mv8uqapl-5s79.webp",
+          "img/subida-mv8uqqna-gms5.webp"
         ],
         "desc": "Esta flauta está hecha en cerezo junto a una afinación en La 432, creada por nosotros mismos con mucho cariño. \nEl limpiador está hecho en maderas nobles, las cuales siempre varían. \nY el estuche está creado con tela Crea 100% algodón.\nEsta flauta se recomienda para niños y también para adultos.\nLo peculiar de ella es que todas las notas suenan armonicas entre si.\nSirve para meditación, ya que con su sonido el alma se estabiliza.\n(Incluye el estuche y limpiador)",
         "specs": [
@@ -54,8 +56,8 @@ window.CONTENT = {
         "name": "Limpiador para Flauta Pentatónica (Repuesto)",
         "price": 6990,
         "imgs": [
-          "img/subida-mv7g05hk-y7ne.webp",
-          "img/subida-mv7fz28q-id3a.webp"
+          "img/subida-mv8uppf8-f3ea.webp",
+          "img/subida-mv7g05hk-y7ne.webp"
         ],
         "desc": "Este es un limpiador que puedes comprar como repuesto si es que se te rompió o extravió el limpiador que venía con la flauta originalmente.",
         "specs": [
