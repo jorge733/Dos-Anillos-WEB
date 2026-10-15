@@ -10,7 +10,7 @@ window.CONTENT = {
     "eyebrow": "Lutería Artesanal · desde 2024",
     "title": "Del alma",
     "titleEm": "al sonido",
-    "lead": "Instrumentos y piezas de madera hechos a mano, con máquinas hechas por Nicolas Bordali",
+    "lead": "Instrumentos y piezas de madera hechas a mano, con máquinas hechas por Nicolas Bordali.",
     "intro": "Creamos Flautas Pentatónicas Principalmente (con todos sus Accesorios). Tambien Desarrollamos diversos instrumentos como Kánteles, xilófonos pentatónicos y otras cosas relacionadas con la pedagogía Waldorf.",
     "button": "Ver catálogo",
     "image": "img/subida-mv7gihvk-nsqm.webp"
