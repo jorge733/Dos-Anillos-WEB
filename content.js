@@ -187,7 +187,7 @@ window.CONTENT = {
     "teamTitle": "Lutieres",
     "makers": [
       {
-        "name": "Nicolás Bordali"
+        "name": "Nicolás Bordali: ,uhyyxfiugyxruegruxguegydwgyexgsiywgrewxgdwygrfycgeyegg"
       },
       {
         "name": "Vicente Paz"
