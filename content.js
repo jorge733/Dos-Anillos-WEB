@@ -24,7 +24,7 @@ window.CONTENT = {
         "name": "Flauta pentatónica en La 432 Hz (Diestro)",
         "price": 69990,
         "imgs": [
-          "img/subida-mv7fln96-ivak.webp",
+          "img/subida-mv8vcmsn-da4d.webp",
           "img/subida-mv7fgaam-2ioc.webp",
           "img/subida-mv7fhy1l-jlth.webp",
           "img/subida-mv7fl2rw-0iz7.webp",
