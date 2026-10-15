@@ -187,13 +187,13 @@ window.CONTENT = {
     "teamTitle": "Lutieres",
     "makers": [
       {
-        "name": "Nicolás Bordali: ,uhyyxfiugyxruegruxguegydwgyexgsiywgrewxgdwygrfycgeyegg"
+        "name": "Nicolás Bordali: Se dedica a crear la flauta como tal, desde el cilindro hacia su final. Él es quien lleva el taller y el negocio."
       },
       {
-        "name": "Vicente Paz"
+        "name": "Vicente Paz: Se dedica a crear las bolsas, y trabajar en trabajos externos en la flauta."
       },
       {
-        "name": "Amador Orellana"
+        "name": "Amador Orellana: Se dedica a tornear las piezas de la flauta, block y cilindro. y también los mangos de los limpiadores de la flauta."
       }
     ],
     "images": [
