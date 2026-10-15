@@ -42,10 +42,13 @@
     <a href="#contacto">Contacto</a>
     <a href="#sugerencias">Sugerencias</a>
   </nav>
-  <a class="cart-btn" href="#carrito">Carrito<span id="cartCount" hidden></span></a>
   <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
   <p class="side-foot">Del alma al sonido<br>© 2026 Dos Anillos</p>
 </header>
+<a class="cart-btn" id="cartBtn" href="#carrito" aria-label="Ver carrito">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>
+  <span id="cartCount" hidden></span>
+</a>
 <button class="side-toggle" id="sideToggle" aria-label="Ocultar menú" aria-expanded="true" aria-controls="nav"><i></i></button>
 
 <main id="main">

@@ -179,8 +179,34 @@ $("#products").addEventListener("click", e => {
   const b = e.target.closest("[data-add]");
   if (!b) return;
   setQty(b.dataset.add, (cart.find(i => i.id === b.dataset.add)?.qty || 0) + 1);
-  location.hash = "#carrito";
+  flyToCart($("img", b.closest(".product")), b);
 });
+
+// La foto del producto vuela hasta el ícono del carrito y el ícono salta.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+function bumpCart() {
+  const btn = $("#cartBtn");
+  btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump");
+}
+$("#cartBtn").addEventListener("animationend", e => e.target === e.currentTarget && e.target.classList.remove("bump"));
+function flyToCart(img, btn) {
+  if (!img || reduceMotion.matches) return bumpCart();
+  // Si la foto quedó fuera de la pantalla (en celular está sobre el botón), sale desde el botón.
+  let from = img.getBoundingClientRect();
+  if (from.bottom < 0 || from.top > innerHeight) from = btn.getBoundingClientRect();
+  const to = $("#cartBtn").getBoundingClientRect();
+  const size = Math.min(from.width, from.height * 2, 160);
+  const x = from.left + from.width / 2 - size / 2, y = from.top + from.height / 2 - size / 2;
+  const dx = to.left + to.width / 2 - (x + size / 2), dy = to.top + to.height / 2 - (y + size / 2);
+  const fly = Object.assign(document.createElement("img"), { src: img.currentSrc || img.src, alt: "", className: "fly-to-cart" });
+  Object.assign(fly.style, { left: `${x}px`, top: `${y}px`, width: `${size}px`, height: `${size}px` });
+  document.body.append(fly);
+  fly.animate([
+    { transform: "translate(0,0) scale(1)", opacity: 1 },
+    { transform: `translate(${dx * .5}px,${dy * .5 - 80}px) scale(.6)`, opacity: 1, offset: .5 },
+    { transform: `translate(${dx}px,${dy}px) scale(.12)`, opacity: .4 }
+  ], { duration: 750, easing: "cubic-bezier(.5,0,.6,1)" }).onfinish = () => { fly.remove(); bumpCart(); };
+}
 $("#cart").addEventListener("click", e => {
   const b = e.target.closest(".qty button");
   if (b) { const id = b.parentElement.dataset.id; setQty(id, cart.find(i => i.id === id).qty + Number(b.dataset.d)); }
