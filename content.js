@@ -86,7 +86,7 @@ window.CONTENT = {
     ]
   },
   "maderas": {
-    "eyebrow": "Maderas",
+    "eyebrow": "Maderas que Empleamos",
     "title": "Cada madera, una voz única",
     "woods": [
       {
