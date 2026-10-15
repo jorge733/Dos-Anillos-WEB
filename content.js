@@ -187,7 +187,7 @@ window.CONTENT = {
     "teamTitle": "Lutieres",
     "makers": [
       {
-        "name": "Nicolás Bordali: Se dedica a crear la flauta como tal, desde el cilindro hacia su final. Él es quien lleva el taller y el negocio."
+        "name": "Nicolás Bordali: Se dedica a crear la flauta como tal, desde el cilindro hacia su final. Él es quien Maneja el taller y el negocio, y les enseña a trabajar a sus compañeros."
       },
       {
         "name": "Vicente Paz: Se dedica a crear las bolsas, y trabajar en trabajos externos en la flauta."
