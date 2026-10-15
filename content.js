@@ -7,11 +7,11 @@ window.CONTENT = {
     "orderEmails": "dosanilloschile@gmail.com"
   },
   "hero": {
-    "eyebrow": "Lutería artesanal · desde 2024",
+    "eyebrow": "Lutería Artesanal · desde 2024",
     "title": "Del alma",
     "titleEm": "al sonido",
-    "lead": "Instrumentos y piezas de madera hechos a mano, veta a veta.",
-    "intro": "Hacemos flautas pentatónicas afinadas en La 432 Hz en nuestro taller en Chile. Cada una se tornea y se termina a mano, y viene con su estuche y su limpiador.",
+    "lead": "Instrumentos y piezas de madera hechos a mano, con máquinas hechas por Nicolas Bordali",
+    "intro": "Creamos Flautas Pentatónicas Principalmente (con todos sus Accesorios). Tambien Desarrollamos diversos instrumentos como Kánteles, xilófonos pentatónicos y otras cosas relacionadas con la pedagogía Waldorf.",
     "button": "Ver catálogo",
     "image": "img/subida-mv7gihvk-nsqm.webp"
   },
@@ -27,11 +27,9 @@ window.CONTENT = {
           "img/subida-mv7fln96-ivak.webp",
           "img/subida-mv7fgaam-2ioc.webp",
           "img/subida-mv7fhy1l-jlth.webp",
-          "img/subida-mv7fl2rw-0iz7.webp",
-          "img/subida-mv7fex8w-gwpn.webp",
-          "img/subida-mv7f6s9z-hzpn.webp"
+          "img/subida-mv7fl2rw-0iz7.webp"
         ],
-        "desc": "Flauta de afinación pentatónica: cualquier combinación de notas suena armoniosa. Ideal para iniciarse y para pedagogía musical. Incluye estuche y limpiador hechos por nosotros.",
+        "desc": "Esta flauta está hecha en cerezo junto a una afinación en La 432, creada por nosotros mismos con mucho cariño. \nEl limpiador está hecho en maderas nobles, las cuales siempre varían. \nY el estuche está creado con tela Crea 100% algodón.\nEsta flauta se recomienda para niños y también para adultos.\nLo peculiar de ella es que todas las notas suenan armonicas entre si.\nSirve para meditación, ya que con su sonido el alma se estabiliza.\n(Incluye el estuche y limpiador)",
         "specs": [
           {
             "label": "Madera",
@@ -44,22 +42,42 @@ window.CONTENT = {
           {
             "label": "Tapón de Flauta (Block)",
             "value": "Sirari "
+          },
+          {
+            "label": "Incluye",
+            "value": "Estuche Y Limpiador"
           }
         ]
       },
       {
         "id": "limpiador-repuesto",
-        "name": "Limpiador (Flauta pentatónica) Repuesto",
+        "name": "Limpiador para Flauta Pentatónica (Repuesto)",
         "price": 6990,
         "imgs": [
           "img/subida-mv7g05hk-y7ne.webp",
           "img/subida-mv7fz28q-id3a.webp"
         ],
-        "desc": "Este es un limpiador que puedes comprar como repuesto si es que se te rompió  o extravió el limpiador que venía con la flauta originalmente.",
+        "desc": "Este es un limpiador que puedes comprar como repuesto si es que se te rompió o extravió el limpiador que venía con la flauta originalmente.",
         "specs": [
           {
             "label": "Flauta compatible ",
             "value": "Pentatónica en La 432 Hz"
+          }
+        ]
+      },
+      {
+        "id": "pmv8szeyk",
+        "name": "Bolsa para Flauta Pentatónica (Repuesto)",
+        "price": 9990,
+        "imgs": [
+          "img/subida-mv8tbico-kpgl.webp",
+          "img/subida-mv8ta0ap-l3jy.webp"
+        ],
+        "desc": "Este estuche está diseñado para que puedas meter en él la flauta pentatónica junto a su limpiador y con un botón poder cerrar la bolsa y poder proteger tu producto.",
+        "specs": [
+          {
+            "label": "Tela ",
+            "value": "Crea 100% Algodón"
           }
         ]
       }
