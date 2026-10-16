@@ -81,6 +81,25 @@ $("#products").innerHTML = C.productos.products.map(p => `
     </div>
   </article>`).join("");
 
+// ---------- Datos estructurados para Google (tienda y productos) ----------
+// Se arman desde content.js, así quedan al día cuando se edita desde /admin.
+const SITE = "https://dosanillos.cl/";
+const abs = src => new URL(src, SITE).href;
+const ldStore = { "@type": "OnlineStore", "@id": SITE + "#tienda", name: "Dos Anillos", url: SITE, logo: abs("logo.png"), image: abs("og-image.jpg"),
+  description: document.querySelector('meta[name="description"]').content, email: C.general.email, telephone: C.general.phone,
+  address: { "@type": "PostalAddress", addressCountry: "CL" }, areaServed: { "@type": "Country", name: "Chile" } };
+const ld = { "@context": "https://schema.org", "@graph": [
+  ldStore,
+  { "@type": "WebSite", "@id": SITE + "#web", url: SITE, name: "Dos Anillos", inLanguage: "es-CL", publisher: { "@id": ldStore["@id"] } },
+  ...C.productos.products.map(p => ({ "@type": "Product", "@id": `${SITE}#${p.id}`, sku: p.id, name: p.name,
+    description: String(p.desc || "").replace(/\s+/g, " ").trim(), image: p.imgs.map(abs),
+    brand: { "@type": "Brand", name: "Dos Anillos" },
+    additionalProperty: p.specs.map(s => ({ "@type": "PropertyValue", name: s.label.trim(), value: s.value.trim() })),
+    offers: { "@type": "Offer", url: SITE + "#catalogo", price: p.price, priceCurrency: "CLP", availability: "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition", seller: { "@id": ldStore["@id"] } } }))
+] };
+document.head.append(Object.assign(document.createElement("script"), { type: "application/ld+json", textContent: JSON.stringify(ld) }));
+
 // ---------- Maderas, cuidado, historia y artesanos ----------
 $("#woods").innerHTML = C.maderas.woods.map(w => `
   <div class="wood reveal"><div class="swatch" style="background:${esc(w.c)}"></div>

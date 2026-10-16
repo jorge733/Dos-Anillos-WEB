@@ -2,5 +2,9 @@
   "trailingSlash": false,
   "functions": {
     "api/*.js": { "includeFiles": "content.js" }
-  }
+  },
+  "headers": [
+    { "source": "/api/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] },
+    { "source": "/admin(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ]
 }
