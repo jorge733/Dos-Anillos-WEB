@@ -178,7 +178,7 @@ window.CONTENT = {
         "c": "linear-gradient(90deg,#4a3326,#5e4130 30%,#3f2b20 60%,#563b2c)",
         "d": "Tono chocolate profundo con vetas elegantes. Es muy estable, se trabaja con facilidad y gana belleza con los años.",
         "tone": "Profundo · elegante",
-        "img": "img/subida-mvefrpj1-pob5.webp"
+        "img": ""
       },
       {
         "name": "Nogal",
