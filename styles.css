@@ -163,7 +163,7 @@ a.btn.full{display:block}
 /* Ficha de producto */
 .back{display:inline-block;font-size:.85rem;color:var(--muted);margin-bottom:1.8rem}
 .back:hover{color:var(--charcoal)}
-.pdp{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);grid-template-areas:"gallery buy" "desc buy";gap:2.5rem 3rem;align-items:start}
+.pdp{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);grid-template-areas:"gallery buy";gap:2.5rem 3rem;align-items:start}
 .gallery{grid-area:gallery;display:flex;gap:.8rem}
 .thumbs{display:flex;flex-direction:column;gap:.5rem;flex:0 0 68px;max-height:min(640px,80vh);overflow-y:auto;scrollbar-width:thin}
 .thumbs button{flex:0 0 68px;height:68px;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--bone);padding:0;transition:border-color .2s}
@@ -181,15 +181,15 @@ a.btn.full{display:block}
 .buybox .price{font-size:2rem;font-weight:300;margin:.8rem 0 .3rem}
 .buybox .btn.full{margin:1.4rem 0 0}
 .buybox .specs{margin:1.6rem 0 0;padding-bottom:0;border-bottom:0}
-.pdp-desc{grid-area:desc;border-top:1px solid var(--line);padding-top:2rem;max-width:720px}
-.pdp-desc h2{font-size:1.9rem;margin-bottom:1rem}
+.pdp-desc{margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid var(--line);font-size:.95rem}
+.pdp-desc h2{font-size:1.4rem;margin-bottom:.7rem}
 .pdp-desc p+p,.care p+p{margin-top:.8rem}
 .specs{display:grid;grid-template-columns:auto 1fr;gap:.6rem 1.5rem;padding:1.4rem 0;margin-bottom:1.6rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .specs dt{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:.15rem}
 .specs dd{color:var(--charcoal)}
 @media (hover:none){.nav-arrow{opacity:1}}
 @media (max-width:900px){
-  .pdp{grid-template-columns:1fr;grid-template-areas:"gallery" "buy" "desc";gap:1.8rem}
+  .pdp{grid-template-columns:1fr;grid-template-areas:"gallery" "buy";gap:1.8rem}
   .gallery{flex-direction:column}
   .thumbs{order:2;flex-direction:row;flex-basis:auto;max-height:none;overflow:auto hidden}
   .thumbs button{flex:0 0 60px;height:60px}

@@ -105,9 +105,9 @@ function renderProduct(p) {
       <p class="price">${clp(p.price)}</p>
       <p class="ship">${shipLabel(p)}</p>
       <button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>
+      ${String(p.desc || "").trim() ? `<div class="pdp-desc"><h2>Descripción</h2>${md(p.desc)}</div>` : ""}
       ${p.specs.length ? `<dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>` : ""}
     </div>
-    ${String(p.desc || "").trim() ? `<div class="pdp-desc"><h2>Descripción</h2>${md(p.desc)}</div>` : ""}
   </article>`;
 }
 
