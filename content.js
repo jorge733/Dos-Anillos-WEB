@@ -85,6 +85,17 @@ window.CONTENT = {
           }
         ],
         "shipping": "auto"
+      },
+      {
+        "id": "pmvefdenh",
+        "name": "PRUEBA",
+        "price": 0,
+        "shipping": "auto",
+        "imgs": [
+          "img/subida-mveffca1-dmr1.webp"
+        ],
+        "desc": "SDGDSGGRHHRHHERHJTJJJJEXSTJRJJ",
+        "specs": []
       }
     ]
   },
