@@ -272,7 +272,10 @@ window.CONTENT = {
       }
     ],
     "images": [
-      "img/taller-torno.webp"
+      "img/taller-torno.webp",
+      "img/subida-mveftu4i-6q8s.webp",
+      "img/subida-mveftz8h-6hsh.webp",
+      "img/subida-mvefuart-ia6c.webp"
     ]
   },
   "contacto": {
