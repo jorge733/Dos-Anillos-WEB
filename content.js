@@ -85,17 +85,6 @@ window.CONTENT = {
           }
         ],
         "shipping": "auto"
-      },
-      {
-        "id": "pmvefdenh",
-        "name": "PRUEBA",
-        "price": 10,
-        "shipping": "auto",
-        "imgs": [
-          "img/subida-mveffca1-dmr1.webp"
-        ],
-        "desc": "SDGDSGGRHHRHHERHJTJJJJEXSTJRJJ",
-        "specs": []
       }
     ]
   },
@@ -188,7 +177,8 @@ window.CONTENT = {
         "name": "Nogal americano",
         "c": "linear-gradient(90deg,#4a3326,#5e4130 30%,#3f2b20 60%,#563b2c)",
         "d": "Tono chocolate profundo con vetas elegantes. Es muy estable, se trabaja con facilidad y gana belleza con los años.",
-        "tone": "Profundo · elegante"
+        "tone": "Profundo · elegante",
+        "img": "img/subida-mvefrpj1-pob5.webp"
       },
       {
         "name": "Nogal",
