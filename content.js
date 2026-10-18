@@ -89,7 +89,7 @@ window.CONTENT = {
       {
         "id": "pmvefdenh",
         "name": "PRUEBA",
-        "price": 0,
+        "price": 10,
         "shipping": "auto",
         "imgs": [
           "img/subida-mveffca1-dmr1.webp"
