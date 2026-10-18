@@ -50,6 +50,7 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>
   <span id="cartCount" hidden></span>
 </a>
+<div class="added" id="added" role="status" aria-live="polite" hidden></div>
 <button class="side-toggle" id="sideToggle" aria-label="Ocultar menú" aria-expanded="true" aria-controls="nav"><i></i></button>
 
 <main id="main">
@@ -58,7 +59,6 @@
 <section class="hero" id="inicio">
   <img class="hero-video" id="heroImg" alt="Flautas pentatónicas de madera Dos Anillos" fetchpriority="high">
   <div class="hero-shade"></div>
-  <a class="hero-mail" id="heroMail"></a>
   <div class="hero-content">
     <p class="eyebrow" data-t="hero.eyebrow"></p>
     <h1><span data-t="hero.title"></span><br><em data-t="hero.titleEm"></em></h1>
@@ -74,7 +74,13 @@
     <p class="eyebrow" data-t="productos.eyebrow"></p>
     <h2 data-t="productos.title"></h2>
   </div>
-  <div id="products"></div>
+  <div class="grid-products" id="products"></div>
+</section>
+
+<!-- FICHA DE PRODUCTO (se abre desde el catálogo: #producto/<id>) -->
+<section class="section" id="producto" data-title="Producto">
+  <a class="back" href="#catalogo">← Volver al catálogo</a>
+  <div id="productView"></div>
 </section>
 
 <!-- MADERAS -->

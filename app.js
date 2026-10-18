@@ -23,9 +23,7 @@ $$("[data-t]").forEach(el => (el.textContent = get(el.dataset.t)));
 $$("[data-md]").forEach(el => (el.innerHTML = inline(get(el.dataset.md))));
 $$("a.wa").forEach(a => (a.href = waLink()));
 $("#heroImg").src = C.hero.image;
-const mailto = `mailto:${C.general.email}`;
-Object.assign($("#heroMail"), { href: mailto, textContent: C.general.email });
-$("#mailBtn").href = mailto;
+$("#mailBtn").href = `mailto:${C.general.email}`;
 
 // ---------- Nav ----------
 const nav = $("#nav");
@@ -46,40 +44,104 @@ sideToggle.onclick = () => setSide(!document.body.classList.contains("side-close
 try { if (localStorage.getItem("sideClosed")) { document.body.classList.add("no-anim"); setSide(true); requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove("no-anim"))); } } catch {}
 
 // ---------- Secciones: una a la vez, según el #ancla de la URL ----------
+// La ficha de cada producto vive en #producto/<id>; en el menú queda marcado «Catálogo».
 const sections = $$("#main > section");
 const baseTitle = document.title;
 function route() {
-  const id = location.hash.slice(1);
+  const [id, sub] = location.hash.slice(1).split("/");
+  const p = id === "producto" && product(decodeURIComponent(sub || ""));
+  if (id === "producto" && !p) return history.replaceState(null, "", "#catalogo"), route();
   const page = sections.find(s => s.id === id) || sections[0];
+  if (p) renderProduct(p);
+  const menuId = p ? "catalogo" : page.id;
   sections.forEach(s => (s.hidden = s !== page));
   $$("#menu a").forEach(a => {
-    const on = a.hash === "#" + page.id;
+    const on = a.hash === "#" + menuId;
     a.classList.toggle("active", on);
     on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
   });
   nav.classList.toggle("on-hero", page === sections[0]);
-  document.title = page === sections[0] ? baseTitle : `${page.dataset.title || $(`#menu a[href="#${page.id}"]`).textContent} · Dos Anillos`;
+  document.title = page === sections[0] ? baseTitle : `${p ? p.name : page.dataset.title || $(`#menu a[href="#${page.id}"]`).textContent} · Dos Anillos`;
   scrollTo({ top: 0, behavior: "instant" });
 }
 addEventListener("hashchange", route);
-route();
 
 // ---------- Catálogo ----------
-// Todas las fotos de cada producto a la vista, sin carrusel.
-$("#products").innerHTML = C.productos.products.map(p => `
-  <article class="product">
-    <div class="photos">${p.imgs.map((src, i) => `
-      <figure><div class="photo-bg" style="background-image:url('${esc(src)}')"></div>
-      <img loading="${i ? "lazy" : "eager"}" src="${esc(src)}" alt="${esc(p.name)} — foto ${i + 1} de ${p.imgs.length}"></figure>`).join("")}
-    </div>
-    <div class="info">
+// Grilla de tarjetas (foto, nombre y precio); cada una abre la ficha del producto.
+const product = id => C.productos.products.find(p => p.id === id);
+const shipLabel = p => p.shipping === "coordinar" ? "Envío por coordinar" : "Envío a todo Chile";
+// Las fotos se muestran completas dentro de su marco; el espacio que sobra se rellena con la misma foto desenfocada.
+const framed = (src, alt, lazy) => `<div class="photo-bg" style="background-image:url('${esc(src)}')"></div>
+  <img ${lazy ? 'loading="lazy" ' : ""}src="${esc(src)}" alt="${esc(alt)}">`;
+
+$("#products").innerHTML = C.productos.products.map((p, i) => `
+  <a class="pcard" href="#producto/${encodeURIComponent(p.id)}">
+    <div class="frame">${p.imgs[0] ? framed(p.imgs[0], p.name, i > 3) : ""}</div>
+    <div class="pcard-body">
       <h3>${esc(p.name)}</h3>
       <p class="price">${clp(p.price)}</p>
-      <div class="desc">${md(p.desc)}</div>
-      <dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>
-      <button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>
+      <p class="ship">${shipLabel(p)}</p>
     </div>
-  </article>`).join("");
+  </a>`).join("");
+
+// ---------- Ficha de producto ----------
+// Miniaturas a la izquierda (abajo en celular), foto grande al centro y los datos de compra a la derecha.
+function renderProduct(p) {
+  const n = p.imgs.length;
+  $("#productView").innerHTML = `
+  <article class="pdp" data-id="${esc(p.id)}">
+    <div class="gallery">
+      ${n > 1 ? `<div class="thumbs">${p.imgs.map((src, i) => `
+        <button type="button" data-i="${i}" aria-label="Ver foto ${i + 1} de ${n}"${i ? "" : ' aria-current="true"'}><img loading="lazy" src="${esc(src)}" alt=""></button>`).join("")}
+      </div>` : ""}
+      <figure class="frame viewer">${n ? framed(p.imgs[0], `${p.name} — foto 1 de ${n}`) : ""}
+        ${n > 1 ? `<button type="button" class="nav-arrow prev" data-step="-1" aria-label="Foto anterior">‹</button>
+        <button type="button" class="nav-arrow next" data-step="1" aria-label="Foto siguiente">›</button>
+        <span class="counter">1 / ${n}</span>` : ""}
+      </figure>
+    </div>
+    <div class="buybox">
+      <h1>${esc(p.name)}</h1>
+      <p class="price">${clp(p.price)}</p>
+      <p class="ship">${shipLabel(p)}</p>
+      <button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>
+      ${p.specs.length ? `<dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>` : ""}
+    </div>
+    ${String(p.desc || "").trim() ? `<div class="pdp-desc"><h2>Descripción</h2>${md(p.desc)}</div>` : ""}
+  </article>`;
+}
+
+function showPhoto(i) {
+  const pdp = $(".pdp"), p = product(pdp.dataset.id), n = p.imgs.length;
+  i = (i + n) % n;
+  pdp.dataset.i = i;
+  const viewer = $(".viewer", pdp);
+  $(".photo-bg", viewer).style.backgroundImage = `url('${p.imgs[i]}')`;
+  Object.assign($("img", viewer), { src: p.imgs[i], alt: `${p.name} — foto ${i + 1} de ${n}` });
+  $(".counter", viewer).textContent = `${i + 1} / ${n}`;
+  $$(".thumbs button", pdp).forEach((b, j) => j === i ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current"));
+}
+const pv = $("#productView");
+pv.addEventListener("click", e => {
+  const t = e.target.closest(".thumbs [data-i]"), s = e.target.closest("[data-step]");
+  if (t) showPhoto(Number(t.dataset.i));
+  if (s) showPhoto(Number($(".pdp").dataset.i || 0) + Number(s.dataset.step));
+});
+// Como en las tiendas grandes: pasar el mouse por una miniatura ya cambia la foto.
+pv.addEventListener("mouseover", e => { const t = e.target.closest(".thumbs [data-i]"); if (t) showPhoto(Number(t.dataset.i)); });
+// En celular se desliza la foto con el dedo.
+let touchX = null;
+pv.addEventListener("touchstart", e => { if (e.target.closest(".viewer")) touchX = e.touches[0].clientX; }, { passive: true });
+pv.addEventListener("touchend", e => {
+  if (touchX == null || !$(".pdp .counter")) return;
+  const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+  if (Math.abs(dx) > 40) showPhoto(Number($(".pdp").dataset.i || 0) + (dx < 0 ? 1 : -1));
+});
+addEventListener("keydown", e => {
+  if ($("#producto").hidden || !$(".pdp .counter") || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") showPhoto(Number($(".pdp").dataset.i || 0) + (e.key === "ArrowRight" ? 1 : -1));
+});
+route();
 
 // ---------- Datos estructurados para Google (tienda y productos) ----------
 // Se arman desde content.js, así quedan al día cuando se edita desde /admin.
@@ -95,14 +157,17 @@ const ld = { "@context": "https://schema.org", "@graph": [
     description: String(p.desc || "").replace(/\s+/g, " ").trim(), image: p.imgs.map(abs),
     brand: { "@type": "Brand", name: "Dos Anillos" },
     additionalProperty: p.specs.map(s => ({ "@type": "PropertyValue", name: s.label.trim(), value: s.value.trim() })),
-    offers: { "@type": "Offer", url: SITE + "#catalogo", price: p.price, priceCurrency: "CLP", availability: "https://schema.org/InStock",
+    offers: { "@type": "Offer", url: `${SITE}#producto/${encodeURIComponent(p.id)}`, price: p.price, priceCurrency: "CLP", availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition", seller: { "@id": ldStore["@id"] } } }))
 ] };
 document.head.append(Object.assign(document.createElement("script"), { type: "application/ld+json", textContent: JSON.stringify(ld) }));
 
 // ---------- Maderas, cuidado, historia y artesanos ----------
+// Cada madera muestra su foto real si tiene una; si no, la muestra de color.
 $("#woods").innerHTML = C.maderas.woods.map(w => `
-  <div class="wood reveal"><div class="swatch" style="background:${esc(w.c)}"></div>
+  <div class="wood reveal">${w.img
+    ? `<img class="swatch photo" loading="lazy" src="${esc(w.img)}" alt="Madera de ${esc(w.name)}">`
+    : `<div class="swatch" style="background:${esc(w.c)}"></div>`}
   <h3>${esc(w.name)}</h3><p>${esc(w.d)}</p><p class="tone">${esc(w.tone)}</p></div>`).join("");
 $("#care").innerHTML = C.cuidado.steps.map((s, i) => `
   <li><span>${i + 1}</span><div><h3>${esc(s.title)}</h3>${md(s.text)}</div></li>`).join("");
@@ -139,7 +204,6 @@ $$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.obse
 
 // ---------- Carrito ----------
 // Se guarda en este navegador ([{ id, qty }]); los precios reales los calcula el servidor al pagar.
-const product = id => C.productos.products.find(p => p.id === id);
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)); } catch {}
 const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
@@ -194,12 +258,33 @@ function renderTotals() {
   $("#payBtn").disabled = !cart.length;
 }
 
-$("#products").addEventListener("click", e => {
+// Agregar no lleva al carrito: la foto vuela al ícono y aparece un aviso al lado.
+pv.addEventListener("click", e => {
   const b = e.target.closest("[data-add]");
   if (!b) return;
-  setQty(b.dataset.add, (cart.find(i => i.id === b.dataset.add)?.qty || 0) + 1);
-  flyToCart($("img", b.closest(".product")), b);
+  const p = product(b.dataset.add);
+  setQty(p.id, (cart.find(i => i.id === p.id)?.qty || 0) + 1);
+  flyToCart($(".viewer img"), b);
+  showAdded(p);
 });
+
+const added = $("#added");
+let addedTimer;
+function showAdded(p) {
+  added.innerHTML = `<span class="tick" aria-hidden="true">✓</span>
+    ${p.imgs[0] ? `<img src="${esc(p.imgs[0])}" alt="">` : ""}
+    <div><strong>Añadido al carrito</strong><span>${esc(p.name)}</span></div>
+    <a href="#carrito">Ver carrito</a>`;
+  added.hidden = false;
+  added.classList.remove("show"); void added.offsetWidth; added.classList.add("show");
+  clearTimeout(addedTimer);
+  addedTimer = setTimeout(hideAdded, 3500);
+}
+const hideAdded = () => added.classList.remove("show");
+added.addEventListener("transitionend", e => { if (e.target === added && !added.classList.contains("show")) added.hidden = true; });
+added.addEventListener("mouseenter", () => clearTimeout(addedTimer));
+added.addEventListener("mouseleave", () => (addedTimer = setTimeout(hideAdded, 1500)));
+added.addEventListener("click", e => e.target.closest("a") && hideAdded());
 
 // La foto del producto vuela hasta el ícono del carrito y el ícono salta.
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");

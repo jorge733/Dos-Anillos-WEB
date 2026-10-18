@@ -65,6 +65,9 @@ label{display:grid;gap:.35rem;font-size:.78rem;font-weight:500;color:var(--muted
 .photo img{width:120px;height:120px;object-fit:cover;border-radius:4px;border:1px solid var(--line);background:var(--cream)}
 .photo .tools{display:flex;justify-content:space-between}
 .photo.single,.photo.single img{width:220px;height:auto;max-height:160px}
+.photo.wide,.photo.wide img{width:260px;height:120px}
+.photo.wide{height:auto}
+.photo.wide .icon.del{width:auto;padding:0 .5rem;font-size:.8rem}
 .pick{width:120px;height:120px;border:1px dashed var(--line);border-radius:4px;color:var(--muted);font-size:.82rem;display:grid;place-items:center;text-align:center;padding:.5rem}
 .pick:hover{border-color:var(--wood);color:var(--wood)}
 .pick.busy{pointer-events:none;opacity:.6}

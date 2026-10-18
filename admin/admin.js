@@ -10,7 +10,7 @@ const TABS = [
   { key: "general", title: "Datos generales", fields: [
     { k: "whatsapp", label: "Número de WhatsApp", hint: "Solo números, con el código de país (ej.: 56912345678). Es adonde llegan los botones de contacto." },
     { k: "phone", label: "Teléfono que se muestra en Contacto" },
-    { k: "email", label: "Correo de contacto", hint: "Se muestra en Inicio y en Contacto, y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
+    { k: "email", label: "Correo de contacto", hint: "Se muestra en Contacto y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
     { k: "orderEmails", label: "Correos que reciben el aviso de cada venta", hint: "Puedes poner varios separados por comas." },
   ] },
   { key: "hero", title: "Inicio", fields: [
@@ -47,10 +47,11 @@ const TABS = [
   ] },
   { key: "maderas", title: "Maderas", fields: [...head,
     { k: "woods", label: "Maderas", type: "list", noun: "madera", name: w => w.name,
-      blank: () => ({ name: "Nueva madera", c: gradient("#a0704f"), d: "", tone: "" }),
+      blank: () => ({ name: "Nueva madera", img: "", c: gradient("#a0704f"), d: "", tone: "" }),
       fields: [
         { k: "name", label: "Nombre" },
-        { k: "c", label: "Color de la muestra", type: "swatch" },
+        { k: "img", label: "Foto real de la madera", type: "optimage", hint: "Si subes una foto, se muestra en lugar del color. Se recorta a una franja horizontal, así que sirve una foto de cerca de la veta." },
+        { k: "c", label: "Color de la muestra (se usa si no hay foto)", type: "swatch" },
         { k: "d", label: "Descripción", type: "textarea" },
         { k: "tone", label: "Carácter (ej.: Cálido · equilibrado)" },
       ] },
@@ -181,6 +182,14 @@ function field(f, obj, rerender) {
         h("div", { className: "photos" },
           h("div", { className: "photo single" }, h("img", { src: srcOf(v), alt: "" })),
           picker("Cambiar foto", false, ([p]) => { set(p); rerender(); })));
+    // Foto que se puede dejar vacía (ej.: madera, que si no tiene foto usa su color).
+    case "optimage":
+      return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
+        h("div", { className: "photos" },
+          v ? h("div", { className: "photo wide" }, h("img", { src: srcOf(v), alt: "" }),
+            h("div", { className: "tools" }, h("button", { type: "button", className: "icon del", textContent: "✕ Quitar foto", title: "Quitar foto",
+              onclick: () => { if (confirm("¿Quitar esta foto? Se volverá a mostrar el color.")) { set(""); rerender(); } } }))) : null,
+          picker(v ? "Cambiar foto" : "+ Subir foto", false, ([p]) => { set(p); rerender(); })));
     case "gallery": {
       const move = (i, d) => { v.splice(i + d, 0, v.splice(i, 1)[0]); touch(); rerender(); };
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
