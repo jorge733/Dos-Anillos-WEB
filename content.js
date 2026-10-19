@@ -10,7 +10,7 @@ window.CONTENT = {
     "eyebrow": "Lutería Artesanal · desde 2024",
     "title": "Del alma",
     "titleEm": "al sonido",
-    "lead": "Instrumentos y piezas de madera hechas a mano, con máquinas hechas por Nicolas Bordali.",
+    "lead": "¡Instrumentos y piezas de madera hechas a mano con mucho amor!",
     "intro": "Creamos Flautas Pentatónicas Principalmente (con todos sus Accesorios). Tambien Desarrollamos diversos instrumentos como Kánteles, xilófonos pentatónicos y otras cosas relacionadas con la pedagogía Waldorf.",
     "button": "Ver catálogo",
     "image": "img/subida-mv7gihvk-nsqm.webp"
@@ -165,32 +165,36 @@ window.CONTENT = {
         "name": "Cerezo",
         "c": "linear-gradient(90deg,#a8613f,#bf7550 25%,#9a5637 55%,#b86e49)",
         "d": "Madera de grano fino y tono rojizo que se oscurece con el tiempo. Se tornea con precisión y deja un acabado suave y sedoso.",
-        "tone": "Cálido · equilibrado"
+        "tone": "Cálido · equilibrado",
+        "img": "img/subida-mvekif2p-e4ob.webp"
       },
       {
         "name": "Haya europea",
         "c": "linear-gradient(90deg,#d8b08a,#e3bf9b 30%,#cfa37c 60%,#dcb592)",
         "d": "Dura, densa y de grano muy fino y uniforme. Es estable, resiste bien el uso diario y su color claro rosado le da un aspecto limpio.",
-        "tone": "Claro · nítido"
+        "tone": "Claro · nítido",
+        "img": "img/subida-mvekil4b-dz7s.webp"
       },
       {
         "name": "Nogal americano",
         "c": "linear-gradient(90deg,#4a3326,#5e4130 30%,#3f2b20 60%,#563b2c)",
         "d": "Tono chocolate profundo con vetas elegantes. Es muy estable, se trabaja con facilidad y gana belleza con los años.",
         "tone": "Profundo · elegante",
-        "img": ""
+        "img": "img/subida-mvekiu07-kb4z.webp"
       },
       {
         "name": "Nogal",
         "c": "linear-gradient(90deg,#7a5638,#8d6544 30%,#6c4b30 60%,#84603f)",
         "d": "Marrón dorado con vetas marcadas. Resistente y estable, con un pulido natural muy agradable al tacto.",
-        "tone": "Cálido · noble"
+        "tone": "Cálido · noble",
+        "img": "img/subida-mvekiyj3-gxuy.webp"
       },
       {
         "name": "Sirari",
         "c": "linear-gradient(90deg,#8c4a2f,#a15a3a 30%,#7a3f27 60%,#965236)",
         "d": "Madera tropical de tono marrón rojizo y veta intensa. Muy dura y densa, de gran durabilidad.",
-        "tone": "Firme · intenso"
+        "tone": "Firme · intenso",
+        "img": "img/subida-mvekj4dd-5na3.webp"
       },
       {
         "name": "Roble chileno",
