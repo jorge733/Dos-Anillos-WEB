@@ -93,67 +93,67 @@ window.CONTENT = {
     "regions": [
       {
         "name": "Arica y Parinacota",
-        "price": null
+        "price": 9500
       },
       {
         "name": "Tarapacá",
-        "price": null
+        "price": 9000
       },
       {
         "name": "Antofagasta",
-        "price": null
+        "price": 8500
       },
       {
         "name": "Atacama",
-        "price": null
+        "price": 7000
       },
       {
         "name": "Coquimbo",
-        "price": null
+        "price": 6200
       },
       {
         "name": "Valparaíso",
-        "price": null
+        "price": 5000
       },
       {
         "name": "Metropolitana de Santiago",
-        "price": null
+        "price": 3800
       },
       {
         "name": "Libertador General Bernardo O'Higgins",
-        "price": null
+        "price": 5000
       },
       {
         "name": "Maule",
-        "price": null
+        "price": 5500
       },
       {
         "name": "Ñuble",
-        "price": null
+        "price": 5800
       },
       {
         "name": "Biobío",
-        "price": null
+        "price": 6000
       },
       {
         "name": "La Araucanía",
-        "price": null
+        "price": 6500
       },
       {
         "name": "Los Ríos",
-        "price": null
+        "price": 6800
       },
       {
         "name": "Los Lagos",
-        "price": null
+        "price": 7200
       },
       {
         "name": "Aysén del General Carlos Ibáñez del Campo",
-        "price": null
+        "price": 11500
       },
       {
         "name": "Magallanes y de la Antártica Chilena",
-        "price": null
+        "price": 12000
       }
     ]
   },
