@@ -200,25 +200,29 @@ window.CONTENT = {
         "name": "Roble chileno",
         "c": "linear-gradient(90deg,#a8724f,#bb8460 30%,#966344 60%,#b07a57)",
         "d": "Madera nativa del sur de Chile, de tono café rojizo y veta marcada. Dura, resistente y muy durable, con mucho carácter.",
-        "tone": "Nativo · robusto"
+        "tone": "Nativo · robusto",
+        "img": "img/subida-mvekojdm-j547.webp"
       },
       {
         "name": "Roble vaporizado",
         "c": "linear-gradient(90deg,#8a5a42,#9c6a50 30%,#7a4e38 60%,#94634a)",
         "d": "Roble chileno tratado con vapor: adquiere un color más parejo y profundo, y gana estabilidad al liberar tensiones internas de la madera.",
-        "tone": "Parejo · estable"
+        "tone": "Parejo · estable",
+        "img": "img/subida-mvekoeqe-cpay.webp"
       },
       {
         "name": "Paquio",
         "c": "linear-gradient(90deg,#a5502f,#b8623c 30%,#934528 60%,#ad5934)",
         "d": "Una de las maderas más duras y densas, de tono rojizo anaranjado que se intensifica con el tiempo. Muy estable y durable.",
-        "tone": "Denso · resistente"
+        "tone": "Denso · resistente",
+        "img": "img/subida-mvekoack-8lh5.webp"
       },
       {
         "name": "Raulí",
         "c": "linear-gradient(90deg,#b06a4f,#c27c5f 30%,#9e5d44 60%,#b8735a)",
         "d": "Madera nativa chilena de tono rosado rojizo y grano fino y parejo. Liviana, estable y noble para trabajar.",
-        "tone": "Nativo · cálido"
+        "tone": "Nativo · cálido",
+        "img": "img/subida-mveko7fh-4ef6.webp"
       }
     ]
   },
