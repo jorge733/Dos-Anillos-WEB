@@ -7,7 +7,9 @@ const head = [
 ];
 const TABS = [
   { key: "pedidos", title: "Pedidos", custom: () => renderOrders() },
+  { key: "notas", title: "Anotaciones", custom: () => renderNotes() },
   { key: "general", title: "Datos generales", fields: [
+    { k: "instagram", label: "Instagram (sin @)", hint: "Ej.: dosanillos. Se muestra en Contacto y en el menú. Déjalo vacío para no mostrarlo." },
     { k: "whatsapp", label: "Número de WhatsApp", hint: "Solo números, con el código de país (ej.: 56912345678). Es adonde llegan los botones de contacto." },
     { k: "phone", label: "Teléfono que se muestra en Contacto" },
     { k: "email", label: "Correo de contacto", hint: "Se muestra en Contacto y recibe las sugerencias. Si lo cambias, el primer mensaje que llegue a ese correo pedirá activar FormSubmit." },
@@ -23,16 +25,23 @@ const TABS = [
     { k: "image", label: "Foto de fondo", type: "image" },
   ] },
   { key: "productos", title: "Catálogo", fields: [...head,
+    { k: "categories", label: "Secciones del catálogo", type: "list", noun: "sección", name: c => c.name, row: true,
+      hint: "El catálogo se muestra dividido en estas secciones, en este orden. Una sección sin productos no aparece.",
+      blank: () => ({ id: "s" + Date.now().toString(36), name: "Nueva sección" }),
+      fields: [{ k: "name", label: "Nombre de la sección" }] },
     { k: "products", label: "Productos a la venta", type: "list", noun: "producto", name: p => p.name,
-      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", price: 0, shipping: "auto", imgs: [], desc: "", specs: [] }),
+      blank: () => ({ id: "p" + Date.now().toString(36), name: "Nuevo producto", category: content.productos.categories[0]?.id || "", price: 0, stock: null, shipping: "auto", imgs: [], desc: "", specs: [] }),
       fields: [
         { k: "name", label: "Nombre" },
+        { k: "category", label: "Sección", type: "select", options: () => content.productos.categories.map(c => [c.id, c.name || "(sin nombre)"]) },
         { k: "price", label: "Precio (CLP)", type: "number", step: 500 },
+        { k: "stock", label: "Unidades disponibles", type: "stock",
+          hint: "Se muestra «Quedan 3» en el sitio y no se puede comprar más que eso. Con 0 aparece como agotado. Déjalo vacío para no mostrar nada. Ojo: no baja sola con cada venta; actualízala tú." },
         { k: "shipping", label: "Envío", type: "select", options: [
             ["auto", "Automático: se cobra según la región (pestaña Envíos)"],
             ["coordinar", "Se calcula después del pago (productos grandes o pesados)"]],
           hint: "Si un pedido trae algún producto con envío «después del pago», todo el envío de ese pedido queda por coordinar con el cliente." },
-        { k: "imgs", label: "Fotos", type: "gallery", hint: "La primera es la principal. Usa las flechas para ordenarlas." },
+        { k: "imgs", label: "Fotos y videos", type: "gallery", video: true, hint: "La primera foto es la principal. Usa las flechas para ordenarlas. Los videos se ven en la ficha del producto (MP4 o MOV, hasta 200 MB)." },
         { k: "desc", label: "Descripción", type: "textarea", hint: MD },
         { k: "specs", label: "Características", type: "list", noun: "característica", name: s => s.label, row: true,
           blank: () => ({ label: "", value: "" }),
@@ -68,8 +77,13 @@ const TABS = [
       fields: [{ k: "title", label: "Título" }, { k: "text", label: "Texto", type: "textarea", hint: MD, rows: 9 }] },
   ] },
   { key: "equipo", title: "Quiénes somos", fields: [...head,
-    { k: "images", label: "Fotos del taller", type: "gallery", hint: "La primera se muestra grande y las demás en una grilla debajo." },
-    { k: "caption", label: "Pie de foto" },
+    { k: "media", label: "Fotos y videos", type: "list", noun: "foto o video", name: m => m.title,
+      hint: "La primera se muestra grande y las demás en una grilla debajo, cada una con su título y descripción.",
+      blank: () => ({ src: "", title: "", text: "" }),
+      fields: [
+        { k: "src", label: "Foto o video", type: "media" },
+        { k: "title", label: "Título (opcional)" },
+        { k: "text", label: "Descripción (opcional)", type: "textarea", rows: 3, hint: MD }] },
     { k: "teamTitle", label: "Título de la lista" },
     { k: "makers", label: "Lutieres", type: "list", noun: "persona", name: m => m.name,
       blank: () => ({ name: "" }), fields: [{ k: "name", label: "Nombre" }] },
@@ -106,8 +120,13 @@ async function api(action, args = {}) {
 function setStatus(msg, kind = "") { const s = $("#status"); s.textContent = msg; s.className = `status ${kind}`; }
 function touch() { dirty = true; $("#save").disabled = false; setStatus("Cambios sin guardar"); }
 
-// ---------- Fotos ----------
-const srcOf = path => uploads[path]?.preview || `/${path}`;
+// ---------- Fotos y videos ----------
+// Las fotos se guardan en el repositorio (img/); los videos, en Vercel Blob (dirección https completa).
+const srcOf = path => uploads[path]?.preview || (/^https?:/.test(path) ? path : `/${path}`);
+const isVideo = src => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(src));
+const preview = (src, alt = "") => isVideo(src)
+  ? h("video", { src: srcOf(src) + "#t=0.5", muted: true, playsInline: true, preload: "metadata", title: "Video" })
+  : h("img", { src: srcOf(src), alt });
 
 // Achica la foto en el navegador (máx. 1800 px, WebP) para que cargue rápido en el sitio.
 async function compress(file) {
@@ -118,7 +137,27 @@ async function compress(file) {
   return new Promise(res => canvas.toBlob(res, "image/webp", 0.82));
 }
 
-async function upload(file) {
+// El video va directo del navegador a Vercel Blob (api/upload.js solo da el permiso).
+const BLOB_CLIENT = "https://esm.sh/@vercel/blob@2.8.0/client";
+async function uploadVideo(file, onProgress) {
+  const headers = { "Content-Type": "application/json", "x-admin-password": encodeURIComponent(password) };
+  const check = await fetch("/api/upload", { method: "POST", headers, body: JSON.stringify({ type: "check" }) });
+  if (!check.ok) throw new Error((await check.json().catch(() => ({}))).error || `Error ${check.status} del servidor.`);
+  const { upload } = await import(BLOB_CLIENT);
+  const ext = (file.name.match(/\.(mp4|webm|mov|m4v)$/i)?.[1] || { "video/webm": "webm", "video/quicktime": "mov" }[file.type] || "mp4").toLowerCase();
+  const r = await upload(`videos/video-${Date.now().toString(36)}.${ext}`, file, {
+    access: "public", handleUploadUrl: "/api/upload", multipart: file.size > 20e6,
+    headers: { "x-admin-password": headers["x-admin-password"] },
+    onUploadProgress: e => onProgress?.(e.percentage),
+  });
+  return r.url;
+}
+
+async function upload(file, onProgress) {
+  if (file.type.startsWith("video/")) {
+    if (file.size > 200 * 1024 * 1024) throw new Error("el video pesa más de 200 MB. Acórtalo o bájale la calidad.");
+    return uploadVideo(file, onProgress);
+  }
   const blob = await compress(file);
   const data = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.readAsDataURL(blob); });
   const { sha } = await api("upload", { data });
@@ -127,15 +166,18 @@ async function upload(file) {
   return path;
 }
 
-function picker(text, multiple, onPaths) {
-  const input = h("input", { type: "file", accept: "image/*", multiple, hidden: true });
+function picker(text, multiple, onPaths, video = false) {
+  const input = h("input", { type: "file", accept: video ? "image/*,video/mp4,video/quicktime,video/webm" : "image/*", multiple, hidden: true });
   const btn = h("button", { type: "button", className: "pick", textContent: text, onclick: () => input.click() });
   input.onchange = async () => {
     const files = [...input.files];
     if (!files.length) return;
     btn.classList.add("busy"); btn.textContent = "Subiendo…";
-    try { onPaths(await Promise.all(files.map(upload))); }
-    catch (e) { alert(`No se pudo subir la foto: ${e.message}`); btn.classList.remove("busy"); btn.textContent = text; }
+    // Los videos tardan: se muestra el avance (si hay varios archivos, el del más atrasado).
+    const pct = files.map(f => f.type.startsWith("video/") ? 0 : 100);
+    const progress = i => p => { pct[i] = p; btn.textContent = `Subiendo… ${Math.round(Math.min(...pct))}%`; };
+    try { onPaths(await Promise.all(files.map((f, i) => upload(f, progress(i))))); }
+    catch (e) { alert(`No se pudo subir: ${e.message}`); btn.classList.remove("busy"); btn.textContent = text; }
   };
   return [btn, input];
 }
@@ -159,9 +201,17 @@ function field(f, obj, rerender) {
       return h("label", {}, f.label, h("textarea", { value: v ?? "", rows: f.rows || 4, oninput: e => set(e.target.value) }), hint);
     case "number":
       return h("label", {}, f.label, h("input", { type: "number", min: 0, step: f.step || 1, value: v ?? 0, oninput: e => set(Number(e.target.value) || 0) }), hint);
-    case "select":
+    case "select": {
+      const options = typeof f.options === "function" ? f.options() : f.options;
+      // Si el valor ya no existe (ej.: se borró la sección), queda elegida la primera opción, igual que en el sitio.
+      const current = options.some(([value]) => value === v) ? v : options[0]?.[0];
       return h("label", {}, f.label, h("select", { onchange: e => set(e.target.value) },
-        ...f.options.map(([value, text]) => h("option", { value, textContent: text, selected: value === (v ?? f.options[0][0]) }))), hint);
+        ...options.map(([value, text]) => h("option", { value, textContent: text, selected: value === current }))), hint);
+    }
+    // Vacío = no se controla el stock (se guarda null).
+    case "stock":
+      return h("label", {}, f.label, h("input", { type: "number", min: 0, step: 1, value: v ?? "", placeholder: "Sin indicar",
+        oninput: e => set(e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value)) || 0)) }), hint);
     // Una fila por región; vacío = sin tarifa (el envío se coordina después).
     case "rates":
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
@@ -190,21 +240,27 @@ function field(f, obj, rerender) {
             h("div", { className: "tools" }, h("button", { type: "button", className: "icon del", textContent: "✕ Quitar foto", title: "Quitar foto",
               onclick: () => { if (confirm("¿Quitar esta foto? Se volverá a mostrar el color.")) { set(""); rerender(); } } }))) : null,
           picker(v ? "Cambiar foto" : "+ Subir foto", false, ([p]) => { set(p); rerender(); })));
+    // Una foto o un video (ej.: Quiénes somos).
+    case "media":
+      return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
+        h("div", { className: "photos" },
+          v ? h("div", { className: "photo single" }, preview(v), isVideo(v) ? h("span", { className: "kind", textContent: "▶ Video" }) : null) : null,
+          picker(v ? "Cambiar foto o video" : "+ Subir foto o video", false, ([p]) => { set(p); rerender(); }, true)));
     case "gallery": {
       const move = (i, d) => { v.splice(i + d, 0, v.splice(i, 1)[0]); touch(); rerender(); };
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
         h("div", { className: "photos" },
-          v.map((p, i) => h("div", { className: "photo" }, h("img", { src: srcOf(p), alt: `Foto ${i + 1}` }),
+          v.map((p, i) => h("div", { className: "photo" }, preview(p, `Foto ${i + 1}`), isVideo(p) ? h("span", { className: "kind", textContent: "▶ Video" }) : null,
             h("div", { className: "tools" },
               h("button", { type: "button", className: "icon", textContent: "←", title: "Mover antes", disabled: i === 0, onclick: () => move(i, -1) }),
-              h("button", { type: "button", className: "icon del", textContent: "✕", title: "Quitar foto", onclick: () => { if (confirm("¿Quitar esta foto?")) { v.splice(i, 1); touch(); rerender(); } } }),
+              h("button", { type: "button", className: "icon del", textContent: "✕", title: "Quitar", onclick: () => { if (confirm(isVideo(p) ? "¿Quitar este video?" : "¿Quitar esta foto?")) { v.splice(i, 1); touch(); rerender(); } } }),
               h("button", { type: "button", className: "icon", textContent: "→", title: "Mover después", disabled: i === v.length - 1, onclick: () => move(i, 1) })))),
-          picker("+ Agregar fotos", true, ps => { v.push(...ps); touch(); rerender(); })));
+          picker(f.video ? "+ Agregar fotos o videos" : "+ Agregar fotos", true, ps => { v.push(...ps); touch(); rerender(); }, f.video)));
     }
     case "list": {
       const box = h("div", { className: "list" });
       const draw = () => box.replaceChildren(
-        h("span", { className: "list-title", textContent: f.label }),
+        h("span", { className: "list-title", textContent: f.label }), hint,
         ...v.map((item, i) => {
           const move = d => { v.splice(i + d, 0, v.splice(i, 1)[0]); touch(); draw(); };
           const title = h("strong", { textContent: f.name(item) || `(sin ${f.k === "specs" ? "nombre" : "título"})` });
@@ -309,6 +365,48 @@ function orderCard(o) {
   return card;
 }
 
+// ---------- Anotaciones ----------
+// Notas privadas del panel. Se guardan solas en la base de datos (no en content.js, que es público).
+let notes = null, notesTimer = null, notesPending = false;
+async function renderNotes() {
+  const ed = $("#editor");
+  const state = h("span", { className: "hint" });
+  const list = h("div", { className: "list" }, h("p", { className: "hint", textContent: "Cargando anotaciones…" }));
+  const text = h("textarea", { rows: 3, placeholder: "Escribe aquí una anotación: pendientes, encargos, ideas…" });
+  const add = h("button", { type: "button", className: "btn", textContent: "Agregar anotación", onclick: () => {
+    if (!text.value.trim() || !notes) return;
+    notes.unshift({ id: Date.now().toString(36), text: text.value.trim(), at: Date.now() });
+    text.value = ""; draw(); persist(0);
+  } });
+  ed.replaceChildren(
+    h("div", { className: "orders-head" }, h("h2", { textContent: "Anotaciones" }), state),
+    h("p", { className: "hint", textContent: "Solo se ven aquí en el panel, nunca en el sitio. Se guardan solas mientras escribes." }),
+    h("div", { className: "item" }, text, add), list);
+
+  async function persist(delay = 800) {
+    clearTimeout(notesTimer); notesPending = true;
+    state.textContent = "Guardando…"; state.className = "hint";
+    notesTimer = setTimeout(async () => {
+      try { await api("saveNotes", { notes }); notesPending = false; state.textContent = "Guardado"; state.className = "hint ok"; }
+      catch (e) { state.textContent = `No se pudo guardar: ${e.message}`; state.className = "hint error"; }
+    }, delay);
+  }
+  function draw() {
+    list.replaceChildren(...(notes.length ? notes.map(n => h("div", { className: "item note" },
+      h("div", { className: "item-head" }, h("span", { className: "hint", textContent: when(n.at) }),
+        h("button", { type: "button", className: "icon del", textContent: "✕", title: "Borrar anotación",
+          onclick: () => { if (confirm("¿Borrar esta anotación?")) { notes = notes.filter(x => x !== n); draw(); persist(0); } } })),
+      h("textarea", { value: n.text, rows: Math.min(12, Math.max(2, n.text.split("\n").length + 1)), oninput: e => { n.text = e.target.value; persist(); } })))
+      : [h("p", { className: "hint", textContent: "Todavía no hay anotaciones." })]));
+  }
+
+  if (!notes) {
+    try { ({ notes } = await api("notes")); }
+    catch (e) { return list.replaceChildren(h("p", { className: "error", textContent: e.message })); }
+  }
+  if (tab === "notas") draw();
+}
+
 // ---------- Entrar, guardar, salir ----------
 async function open(pw) {
   password = pw;
@@ -343,7 +441,7 @@ $("#logout").onclick = () => {
   dirty = false; sessionStorage.removeItem("adminPw"); location.reload();
 };
 
-addEventListener("beforeunload", e => { if (dirty) e.preventDefault(); });
+addEventListener("beforeunload", e => { if (dirty || notesPending) e.preventDefault(); });
 
 // Si ya entraste en esta pestaña, no vuelve a pedir la contraseña.
 const saved = sessionStorage.getItem("adminPw");

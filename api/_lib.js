@@ -12,6 +12,9 @@ const crypto = require("crypto");
 
 const fail = (status, msg) => Object.assign(new Error(msg), { status });
 const env = k => process.env[k] || "";
+const hash = s => crypto.createHash("sha256").update(String(s)).digest();
+// Contraseña del panel /admin (variable ADMIN_PASSWORD).
+const passwordOk = p => !!env("ADMIN_PASSWORD") && crypto.timingSafeEqual(hash(p), hash(env("ADMIN_PASSWORD")));
 
 // Envuelve una función para que los errores lleguen al navegador como { error } con su código.
 const handle = fn => async (req, res) => {
@@ -30,6 +33,12 @@ function content() {
   return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
 }
 
+// Unidades disponibles de un producto (/admin → Catálogo → Unidades disponibles). Vacío = no se controla.
+const stockOf = p => p.stock == null || p.stock === "" ? Infinity : Math.max(0, Math.floor(Number(p.stock)) || 0);
+// Las galerías pueden traer videos; donde hace falta una foto (correos) se usa la primera foto.
+const isVideo = src => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(src));
+const coverOf = p => (p?.imgs || []).find(s => !isVideo(s));
+
 // Convierte el carrito del navegador ([{ id, qty }]) en líneas con el precio y las medidas reales.
 function priceCart(items, c = content()) {
   if (!Array.isArray(items) || !items.length || items.length > 20) throw fail(400, "El carrito está vacío.");
@@ -38,6 +47,9 @@ function priceCart(items, c = content()) {
     const n = Math.floor(Number(qty));
     if (!p) throw fail(400, "Un producto del carrito ya no está disponible. Revisa el carrito.");
     if (!(n >= 1 && n <= 20)) throw fail(400, "Cantidad inválida.");
+    const left = stockOf(p);
+    if (!left) throw fail(400, `«${p.name}» se agotó. Quítalo del carrito para seguir.`);
+    if (n > left) throw fail(400, `Solo ${left === 1 ? "queda 1 unidad" : `quedan ${left} unidades`} de «${p.name}». Ajusta la cantidad en el carrito.`);
     return { id, name: p.name, price: Number(p.price), qty: n };
   });
   return { lines, subtotal: lines.reduce((s, l) => s + l.price * l.qty, 0) };
@@ -75,6 +87,12 @@ const orders = {
   },
   // La vuelta del cliente y el aviso de Mercado Pago pueden llegar al mismo tiempo: solo el primero manda los correos.
   claimPaid: async id => (await redis("SET", `paid:${id}`, "1", "NX", "EX", 90 * 24 * 3600)) === "OK",
+};
+
+// Anotaciones privadas del panel (no van en content.js, que cualquiera puede ver).
+const notes = {
+  async get() { const s = await redis("GET", "notes"); return s ? JSON.parse(s) : []; },
+  async save(list) { await redis("SET", "notes", JSON.stringify(list)); return list; },
 };
 
 // Número de pedido corto y sin símbolos raros (va a Mercado Pago como referencia).
@@ -160,7 +178,7 @@ function orderHtml(o, { preheader, eyebrow, title, intro, callout, actions = "",
   const c = o.customer, products = content().productos.products;
   const when = new Date(o.paidAt || o.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "long", timeStyle: "short" });
   const line = l => {
-    const img = products.find(p => p.id === l.id)?.imgs?.[0];
+    const img = coverOf(products.find(p => p.id === l.id));
     return `<tr>
       <td width="64" style="padding:14px 14px 14px 0;border-bottom:1px solid ${K.line};vertical-align:middle">${img ? `<img src="${esc(absUrl(img))}" width="64" height="64" alt="" style="display:block;width:64px;height:64px;object-fit:cover;background:${K.bone}">` : ""}</td>
       <td style="padding:14px 0;border-bottom:1px solid ${K.line};vertical-align:middle;font-family:${SERIF};font-size:19px;line-height:1.25;color:${K.charcoal}">${esc(l.name)}<br><span style="font-family:${SANS};font-size:13px;color:${K.muted}">Cantidad: ${l.qty}</span></td>
@@ -262,4 +280,4 @@ async function notifyShipped(o) {
   }), c.general.email);
 }
 
-module.exports = { fail, handle, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };
+module.exports = { fail, handle, passwordOk, notes, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };

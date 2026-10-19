@@ -11,7 +11,7 @@ const get = path => path.split(".").reduce((o, k) => o?.[k], C) ?? "";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 // Formato mínimo para los textos del panel: **negrita**, párrafos separados por una línea en blanco y listas con "- ".
 const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-const md = s => String(s ?? "").trim().split(/\n\s*\n/).map(b => {
+const md = s => String(s ?? "").trim().split(/\n\s*\n/).filter(Boolean).map(b => {
   const lines = b.split("\n").map(l => l.trim()).filter(Boolean);
   const items = lines.filter(l => l.startsWith("- "));
   if (items.length && items.length === lines.length) return `<ul>${items.map(l => `<li>${inline(l.slice(2))}</li>`).join("")}</ul>`;
@@ -67,22 +67,43 @@ function route() {
 addEventListener("hashchange", route);
 
 // ---------- Catálogo ----------
-// Grilla de tarjetas (foto, nombre y precio); cada una abre la ficha del producto.
+// Grilla de tarjetas (foto, nombre y precio) por sección (Lutería, Artesanías…); cada una abre la ficha del producto.
 const product = id => C.productos.products.find(p => p.id === id);
 const shipLabel = p => p.shipping === "coordinar" ? "Envío por coordinar" : "Envío a todo Chile";
+// Unidades disponibles (/admin → Catálogo). Vacío = no se controla ni se muestra. Mismo cálculo que api/_lib.js.
+const stockOf = p => p.stock == null || p.stock === "" ? Infinity : Math.max(0, Math.floor(Number(p.stock)) || 0);
+const maxQty = p => Math.min(20, stockOf(p));
+const stockLabel = p => { const n = stockOf(p); return !n ? "Agotado" : n === 1 ? "¡Última unidad!" : n < Infinity ? `Quedan ${n} unidades` : ""; };
+const stockHtml = p => stockLabel(p) ? `<p class="stock${stockOf(p) ? "" : " out"}">${stockLabel(p)}</p>` : "";
+// Las galerías pueden traer videos (subidos desde /admin). Donde se necesita una foto se usa la primera foto.
+const isVideo = src => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(src));
+const cover = p => p.imgs.find(s => !isVideo(s)) || "";
 // Las fotos se muestran completas dentro de su marco; el espacio que sobra se rellena con la misma foto desenfocada.
 const framed = (src, alt, lazy) => `<div class="photo-bg" style="background-image:url('${esc(src)}')"></div>
   <img ${lazy ? 'loading="lazy" ' : ""}src="${esc(src)}" alt="${esc(alt)}">`;
+const videoHtml = (src, controls = true) => `<video src="${esc(src)}${controls ? "" : "#t=0.5"}" ${controls ? "controls" : "muted"} playsinline preload="metadata"></video>`;
+const media = (src, alt, lazy) => isVideo(src) ? videoHtml(src) : framed(src, alt, lazy);
 
-$("#products").innerHTML = C.productos.products.map((p, i) => `
-  <a class="pcard" href="#producto/${encodeURIComponent(p.id)}">
-    <div class="frame">${p.imgs[0] ? framed(p.imgs[0], p.name, i > 3) : ""}</div>
+// Cada producto va en su sección; si su sección ya no existe, queda en la primera. Las secciones vacías no se muestran.
+const cats = C.productos.categories?.length ? C.productos.categories : [{ id: "", name: "" }];
+const catOf = p => cats.some(c => c.id === p.category) ? p.category : cats[0].id;
+let cardIndex = 0;
+const card = p => `
+  <a class="pcard${stockOf(p) ? "" : " sold-out"}" href="#producto/${encodeURIComponent(p.id)}">
+    <div class="frame">${cover(p) ? framed(cover(p), p.name, cardIndex++ > 3) : p.imgs[0] ? videoHtml(p.imgs[0], false) : ""}</div>
     <div class="pcard-body">
       <h3>${esc(p.name)}</h3>
       <p class="price">${clp(p.price)}</p>
       <p class="ship">${shipLabel(p)}</p>
+      ${stockHtml(p)}
     </div>
-  </a>`).join("");
+  </a>`;
+const groups = cats.map(c => ({ ...c, items: C.productos.products.filter(p => catOf(p) === c.id) })).filter(g => g.items.length);
+$("#products").innerHTML = groups.map(g => `
+  <div class="category" id="seccion-${esc(g.id)}">
+    ${groups.length > 1 && g.name ? `<h3 class="cat-title">${esc(g.name)}</h3>` : ""}
+    <div class="grid-products">${g.items.map(card).join("")}</div>
+  </div>`).join("");
 
 // ---------- Ficha de producto ----------
 // Miniaturas a la izquierda (abajo en celular), foto grande al centro y los datos de compra a la derecha.
@@ -92,9 +113,10 @@ function renderProduct(p) {
   <article class="pdp" data-id="${esc(p.id)}">
     <div class="gallery">
       ${n > 1 ? `<div class="thumbs">${p.imgs.map((src, i) => `
-        <button type="button" data-i="${i}" aria-label="Ver foto ${i + 1} de ${n}"${i ? "" : ' aria-current="true"'}><img loading="lazy" src="${esc(src)}" alt=""></button>`).join("")}
+        <button type="button" data-i="${i}" aria-label="Ver ${isVideo(src) ? "video" : "foto"} ${i + 1} de ${n}"${i ? "" : ' aria-current="true"'}>${isVideo(src)
+          ? `${videoHtml(src, false)}<span class="play" aria-hidden="true">▶</span>` : `<img loading="lazy" src="${esc(src)}" alt="">`}</button>`).join("")}
       </div>` : ""}
-      <figure class="frame viewer">${n ? framed(p.imgs[0], `${p.name} — foto 1 de ${n}`) : ""}
+      <figure class="frame viewer"><div class="slide">${n ? media(p.imgs[0], `${p.name} — foto 1 de ${n}`) : ""}</div>
         ${n > 1 ? `<button type="button" class="nav-arrow prev" data-step="-1" aria-label="Foto anterior">‹</button>
         <button type="button" class="nav-arrow next" data-step="1" aria-label="Foto siguiente">›</button>
         <span class="counter">1 / ${n}</span>` : ""}
@@ -104,7 +126,10 @@ function renderProduct(p) {
       <h1>${esc(p.name)}</h1>
       <p class="price">${clp(p.price)}</p>
       <p class="ship">${shipLabel(p)}</p>
-      <button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>
+      ${stockHtml(p)}
+      ${stockOf(p) ? `<button class="btn full center" type="button" data-add="${esc(p.id)}">Agregar al carrito</button>`
+        : `<button class="btn full center" type="button" disabled>Agotado</button>
+      <p class="small muted sold-note">¿Lo quieres igual? <a class="link" href="${waLink()}?text=${encodeURIComponent(`Hola, me interesa «${p.name}». ¿Cuándo vuelve a estar disponible?`)}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></p>`}
       ${String(p.desc || "").trim() ? `<div class="pdp-desc"><h2>Descripción</h2>${md(p.desc)}</div>` : ""}
       ${p.specs.length ? `<dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>` : ""}
     </div>
@@ -114,10 +139,11 @@ function renderProduct(p) {
 function showPhoto(i) {
   const pdp = $(".pdp"), p = product(pdp.dataset.id), n = p.imgs.length;
   i = (i + n) % n;
+  // Pasar otra vez el mouse por la miniatura que ya se ve no reinicia el video.
+  if (i === Number(pdp.dataset.i || 0)) return;
   pdp.dataset.i = i;
   const viewer = $(".viewer", pdp);
-  $(".photo-bg", viewer).style.backgroundImage = `url('${p.imgs[i]}')`;
-  Object.assign($("img", viewer), { src: p.imgs[i], alt: `${p.name} — foto ${i + 1} de ${n}` });
+  $(".slide", viewer).innerHTML = media(p.imgs[i], `${p.name} — foto ${i + 1} de ${n}`);
   $(".counter", viewer).textContent = `${i + 1} / ${n}`;
   $$(".thumbs button", pdp).forEach((b, j) => j === i ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current"));
 }
@@ -149,15 +175,16 @@ const SITE = "https://dosanillos.cl/";
 const abs = src => new URL(src, SITE).href;
 const ldStore = { "@type": "OnlineStore", "@id": SITE + "#tienda", name: "Dos Anillos", url: SITE, logo: abs("logo.png"), image: abs("og-image.jpg"),
   description: document.querySelector('meta[name="description"]').content, email: C.general.email, telephone: C.general.phone,
-  address: { "@type": "PostalAddress", addressCountry: "CL" }, areaServed: { "@type": "Country", name: "Chile" } };
+  address: { "@type": "PostalAddress", addressCountry: "CL" }, areaServed: { "@type": "Country", name: "Chile" },
+  ...(C.general.instagram && { sameAs: [`https://www.instagram.com/${C.general.instagram}/`] }) };
 const ld = { "@context": "https://schema.org", "@graph": [
   ldStore,
   { "@type": "WebSite", "@id": SITE + "#web", url: SITE, name: "Dos Anillos", inLanguage: "es-CL", publisher: { "@id": ldStore["@id"] } },
   ...C.productos.products.map(p => ({ "@type": "Product", "@id": `${SITE}#${p.id}`, sku: p.id, name: p.name,
-    description: String(p.desc || "").replace(/\s+/g, " ").trim(), image: p.imgs.map(abs),
+    description: String(p.desc || "").replace(/\s+/g, " ").trim(), image: p.imgs.filter(s => !isVideo(s)).map(abs),
     brand: { "@type": "Brand", name: "Dos Anillos" },
     additionalProperty: p.specs.map(s => ({ "@type": "PropertyValue", name: s.label.trim(), value: s.value.trim() })),
-    offers: { "@type": "Offer", url: `${SITE}#producto/${encodeURIComponent(p.id)}`, price: p.price, priceCurrency: "CLP", availability: "https://schema.org/InStock",
+    offers: { "@type": "Offer", url: `${SITE}#producto/${encodeURIComponent(p.id)}`, price: p.price, priceCurrency: "CLP", availability: `https://schema.org/${stockOf(p) ? "InStock" : "OutOfStock"}`,
       itemCondition: "https://schema.org/NewCondition", seller: { "@id": ldStore["@id"] } } }))
 ] };
 document.head.append(Object.assign(document.createElement("script"), { type: "application/ld+json", textContent: JSON.stringify(ld) }));
@@ -173,8 +200,20 @@ $("#care").innerHTML = C.cuidado.steps.map((s, i) => `
   <li><span>${i + 1}</span><div><h3>${esc(s.title)}</h3>${md(s.text)}</div></li>`).join("");
 $("#story").innerHTML = C.historia.blocks.map(b => `<article><h3>${esc(b.title)}</h3>${md(b.text)}</article>`).join("");
 $("#makers").innerHTML = C.equipo.makers.map(m => `<li>${esc(m.name)}</li>`).join("");
-// Fotos del taller: la primera grande y el resto en una grilla debajo.
-$("#teamPhotos").innerHTML = C.equipo.images.map((src, i) => `<img loading="lazy" src="${esc(src)}" alt="Taller Dos Anillos — foto ${i + 1}">`).join("");
+// Fotos y videos del taller, cada uno con su título y descripción: el primero grande y el resto en una grilla debajo.
+$("#teamPhotos").innerHTML = (C.equipo.media || []).filter(m => m.src).map((m, i) => `
+  <figure class="team-item reveal">
+    ${isVideo(m.src) ? videoHtml(m.src) : `<img loading="lazy" src="${esc(m.src)}" alt="${esc(m.title || `Taller Dos Anillos — foto ${i + 1}`)}">`}
+    ${m.title || String(m.text || "").trim() ? `<figcaption>${m.title ? `<h3>${esc(m.title)}</h3>` : ""}${md(m.text)}</figcaption>` : ""}
+  </figure>`).join("");
+
+// ---------- Instagram ----------
+const ig = String(C.general.instagram || "").replace(/^@/, "").trim();
+const igIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r=".9" fill="currentColor" stroke="none"/></svg>`;
+$$("[data-ig]").forEach(el => {
+  el.hidden = !ig;
+  if (ig) el.innerHTML = `<a class="ig" href="https://www.instagram.com/${encodeURIComponent(ig)}/" target="_blank" rel="noopener" aria-label="Instagram de Dos Anillos (@${esc(ig)})">${igIcon}<span>@${esc(ig)}</span></a>`;
+});
 
 // ---------- Contactos secundarios (solo los que tienen número) ----------
 const others = (C.contacto.others || []).filter(o => o.whatsapp);
@@ -205,13 +244,15 @@ $$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.obse
 // ---------- Carrito ----------
 // Se guarda en este navegador ([{ id, qty }]); los precios reales los calcula el servidor al pagar.
 let cart = [];
-try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)); } catch {}
+// Si desde la última visita un producto se agotó o quedan menos unidades, el carrito se ajusta.
+try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)).map(i => ({ ...i, qty: Math.min(i.qty, maxQty(product(i.id))) })).filter(i => i.qty > 0); } catch {}
 const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
 const subtotal = () => cart.reduce((s, i) => s + product(i.id).price * i.qty, 0);
 
 function setQty(id, qty) {
   const item = cart.find(i => i.id === id);
-  if (item) item.qty = Math.max(0, Math.min(20, qty)); else if (qty > 0) cart.push({ id, qty });
+  qty = Math.max(0, Math.min(maxQty(product(id)), qty));
+  if (item) item.qty = qty; else if (qty > 0) cart.push({ id, qty });
   cart = cart.filter(i => i.qty > 0);
   saveCart(); renderCart();
 }
@@ -222,8 +263,8 @@ function renderCart() {
   $("#checkout").hidden = !n;
   $("#cart").innerHTML = n ? `
     <ul class="cart-list">${cart.map(i => { const p = product(i.id); return `
-      <li><img src="${esc(p.imgs[0])}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}</p></div>
-        <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno">+</button></div>
+      <li><img src="${esc(cover(p))}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}${i.qty >= stockOf(p) ? ` · ${stockOf(p) === 1 ? "queda 1 unidad" : `quedan ${stockOf(p)} unidades`}` : ""}</p></div>
+        <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno"${i.qty >= maxQty(p) ? " disabled" : ""}>+</button></div>
         <strong>${clp(p.price * i.qty)}</strong></li>`; }).join("")}
     </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#catalogo">Ver catálogo</a>`;
   renderTotals();
@@ -262,8 +303,9 @@ function renderTotals() {
 pv.addEventListener("click", e => {
   const b = e.target.closest("[data-add]");
   if (!b) return;
-  const p = product(b.dataset.add);
-  setQty(p.id, (cart.find(i => i.id === p.id)?.qty || 0) + 1);
+  const p = product(b.dataset.add), had = cart.find(i => i.id === p.id)?.qty || 0;
+  if (had >= maxQty(p)) return toast(stockOf(p) <= 20 ? `Ya tienes en el carrito todas las unidades disponibles (${stockOf(p)}).` : "Puedes llevar hasta 20 unidades por pedido.");
+  setQty(p.id, had + 1);
   flyToCart($(".viewer img"), b);
   showAdded(p);
 });
@@ -272,7 +314,7 @@ const added = $("#added");
 let addedTimer;
 function showAdded(p) {
   added.innerHTML = `<span class="tick" aria-hidden="true">✓</span>
-    ${p.imgs[0] ? `<img src="${esc(p.imgs[0])}" alt="">` : ""}
+    ${cover(p) ? `<img src="${esc(cover(p))}" alt="">` : ""}
     <div><strong>Añadido al carrito</strong><span>${esc(p.name)}</span></div>
     <a href="#carrito">Ver carrito</a>`;
   added.hidden = false;

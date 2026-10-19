@@ -7,7 +7,7 @@
 //   GITHUB_REPO     opcional, por defecto jorge733/Dos-Anillos-WEB
 //   GITHUB_BRANCH   opcional, por defecto main
 const crypto = require("crypto");
-const { orders, notifyShipped } = require("./_lib");
+const { orders, notes, notifyShipped, passwordOk } = require("./_lib");
 
 const REPO = process.env.GITHUB_REPO || "jorge733/Dos-Anillos-WEB";
 const BRANCH = process.env.GITHUB_BRANCH || "main";
@@ -16,8 +16,6 @@ const HEADER = "// Contenido del sitio. Se edita desde /admin (o a mano: lo que 
 const IMG_PATH = /^img\/[a-z0-9-]+\.webp$/;
 
 const fail = (status, msg) => Object.assign(new Error(msg), { status });
-const hash = s => crypto.createHash("sha256").update(String(s)).digest();
-const passwordOk = p => !!process.env.ADMIN_PASSWORD && crypto.timingSafeEqual(hash(p), hash(process.env.ADMIN_PASSWORD));
 // sha que git le asigna a un archivo, para saber cuál quedó guardado sin volver a consultarlo.
 const blobSha = text => { const b = Buffer.from(text, "utf8"); return crypto.createHash("sha1").update(`blob ${b.length}\0`).update(b).digest("hex"); };
 
@@ -65,6 +63,15 @@ const actions = {
     }
     await orders.save(o);
     return { ok: true, mailed };
+  },
+
+  // Anotaciones privadas del panel: viven en la base de datos, nunca en el sitio público.
+  async notes() {
+    return { notes: await notes.get() };
+  },
+  async saveNotes({ notes: list }) {
+    if (!Array.isArray(list) || list.length > 500) throw fail(400, "Anotaciones inválidas.");
+    return { notes: await notes.save(list.map(n => ({ id: String(n.id).slice(0, 24), text: String(n.text ?? "").slice(0, 10000), at: Number(n.at) || Date.now() }))) };
   },
 
   // Sube una foto como blob suelto (no crea commit); queda incluida en el próximo guardado.

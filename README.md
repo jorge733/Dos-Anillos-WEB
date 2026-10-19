@@ -17,6 +17,20 @@ Configuración (una sola vez):
    - Opcionales: `GITHUB_REPO` (por defecto `jorge733/Dos-Anillos-WEB`) y `GITHUB_BRANCH` (por defecto `main`).
 3. Vuelve a publicar (*Deployments → Redeploy*) para que tome las variables.
 
+### Qué más tiene el panel
+
+- **Catálogo → Secciones del catálogo**: el catálogo se muestra dividido en secciones (por ahora *Lutería* y *Artesanías y otros*). Cada producto elige su sección.
+- **Unidades disponibles** (cada producto): el sitio muestra «Quedan 3 unidades» y no deja comprar más que eso; con 0 el producto aparece agotado. Vacío = no se muestra nada. No baja sola con cada venta: hay que actualizarla.
+- **Anotaciones**: notas privadas que solo se ven en el panel. Se guardan solas en la base de datos (Upstash), no en `content.js`, que es público.
+- **Quiénes somos**: fotos y videos, cada uno con título y descripción.
+- **Datos generales → Instagram**: se muestra en Contacto y en el menú.
+
+### Videos (Vercel Blob)
+
+Las fotos se guardan en el repositorio, pero los videos pesan demasiado: el navegador los sube directo a **Vercel Blob** (`api/upload.js` solo revisa la contraseña y da el permiso). Se pueden poner en las fotos de cada producto y en Quiénes somos (MP4, MOV o WebM, hasta 200 MB).
+
+Configuración (una sola vez): en Vercel, en el proyecto, *Storage → Create → Blob*, con acceso **público**, y conéctalo al proyecto. Eso crea la variable `BLOB_READ_WRITE_TOKEN`. Vuelve a publicar. El plan gratis de Vercel incluye 1 GB.
+
 ## Tienda: carrito y Mercado Pago
 
 El cliente arma su carrito, deja sus datos de envío y paga los productos y el envío con Mercado Pago (Checkout Pro). Al volver, el sitio muestra el comprobante, le llega un correo al cliente y otro a los dueños, y el pedido aparece en la pestaña **Pedidos** de `/admin`.
@@ -32,7 +46,7 @@ Cada producto (`/admin` → *Catálogo*) tiene la opción **Envío**:
 
 Una región sin precio también queda por coordinar.
 
-Funciones: `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios siempre se recalculan en el servidor.
+Funciones: `api/upload.js` (permiso para subir videos), `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios siempre se recalculan en el servidor.
 
 Variables de entorno en Vercel:
 

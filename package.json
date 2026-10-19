@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Dependencias de las funciones de api/ (Vercel las instala al publicar).",
+  "dependencies": {
+    "@vercel/blob": "2.8.0"
+  }
+}

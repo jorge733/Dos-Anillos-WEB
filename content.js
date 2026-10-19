@@ -4,7 +4,8 @@ window.CONTENT = {
     "whatsapp": "56961772886",
     "phone": "+56 9 6177 2886",
     "email": "dosanilloschile@gmail.com",
-    "orderEmails": "dosanilloschile@gmail.com"
+    "orderEmails": "dosanilloschile@gmail.com",
+    "instagram": "dosanillos"
   },
   "hero": {
     "eyebrow": "Lutería Artesanal · desde 2024",
@@ -18,11 +19,24 @@ window.CONTENT = {
   "productos": {
     "eyebrow": "Nuestros Productos",
     "title": "Hechas a mano, pieza por pieza",
+    "categories": [
+      {
+        "id": "luteria",
+        "name": "Lutería"
+      },
+      {
+        "id": "artesanias",
+        "name": "Artesanías y otros"
+      }
+    ],
     "products": [
       {
         "id": "flauta-pentatonica-diestro",
         "name": "Flauta pentatónica en La 432 Hz (Diestro)",
+        "category": "luteria",
         "price": 69990,
+        "stock": null,
+        "shipping": "auto",
         "imgs": [
           "img/subida-mv8vcmsn-da4d.webp",
           "img/subida-mv7fgaam-2ioc.webp",
@@ -49,13 +63,15 @@ window.CONTENT = {
             "label": "Incluye",
             "value": "Estuche Y Limpiador"
           }
-        ],
-        "shipping": "auto"
+        ]
       },
       {
         "id": "limpiador-repuesto",
         "name": "Limpiador para Flauta Pentatónica (Repuesto)",
+        "category": "luteria",
         "price": 6990,
+        "stock": null,
+        "shipping": "auto",
         "imgs": [
           "img/subida-mv8uppf8-f3ea.webp",
           "img/subida-mv7g05hk-y7ne.webp"
@@ -66,13 +82,15 @@ window.CONTENT = {
             "label": "Flauta compatible ",
             "value": "Pentatónica en La 432 Hz"
           }
-        ],
-        "shipping": "auto"
+        ]
       },
       {
         "id": "pmv8szeyk",
         "name": "Bolsa para Flauta Pentatónica (Repuesto)",
+        "category": "luteria",
         "price": 9990,
+        "stock": null,
+        "shipping": "auto",
         "imgs": [
           "img/subida-mv8tbico-kpgl.webp",
           "img/subida-mv8ta0ap-l3jy.webp"
@@ -83,8 +101,7 @@ window.CONTENT = {
             "label": "Tela ",
             "value": "Crea 100% Algodón"
           }
-        ],
-        "shipping": "auto"
+        ]
       }
     ]
   },
@@ -273,7 +290,13 @@ window.CONTENT = {
   "equipo": {
     "eyebrow": "Quiénes somos",
     "title": "Las manos detrás de cada pieza",
-    "caption": "Nuestro taller",
+    "media": [
+      {
+        "src": "img/taller-torno.webp",
+        "title": "Nuestro taller",
+        "text": ""
+      }
+    ],
     "teamTitle": "Lutieres",
     "makers": [
       {
@@ -285,9 +308,6 @@ window.CONTENT = {
       {
         "name": "Amador Orellana: Se dedica a tornear las piezas de la flauta, block y cilindro. y también los mangos de los limpiadores de la flauta."
       }
-    ],
-    "images": [
-      "img/taller-torno.webp"
     ]
   },
   "contacto": {

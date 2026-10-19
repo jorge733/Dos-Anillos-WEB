@@ -101,3 +101,15 @@ select{appearance:auto}
 .lines li{display:flex;justify-content:space-between;gap:1rem;padding:.45rem 0;border-bottom:1px solid var(--line)}
 .lines .sum{font-weight:600;color:var(--charcoal)}
 .order>.btn{justify-self:start}
+
+/* Videos en las galerías */
+.photo video{width:120px;height:120px;object-fit:cover;border-radius:4px;border:1px solid var(--line);background:var(--charcoal);display:block}
+.photo.single video{width:220px;height:auto;max-height:160px}
+.photo .kind{position:absolute;top:.35rem;left:.35rem;font-size:.68rem;font-weight:500;padding:.1rem .45rem;border-radius:1rem;background:rgba(43,42,39,.75);color:var(--paper)}
+
+/* Anotaciones */
+.note .item-head .hint{margin-right:auto}
+.note textarea{min-height:3.5rem}
+.item>.btn{justify-self:start}
+.hint.ok{color:var(--sage-dark)}
+.hint.error{color:var(--error)}
