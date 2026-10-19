@@ -229,7 +229,7 @@ window.CONTENT = {
         "img": "img/subida-mvfjcd2a-zz9l.webp",
         "c": "linear-gradient(90deg,#a0704f,#ab8164 30%,#8d6346 60%,#a6795a)",
         "d": " Es una madera dura y pesada, con alta resistencia al impacto y al desgaste.",
-        "tone": "Fuerte y macizo."
+        "tone": "Fuerte • macizo."
       }
     ]
   },
