@@ -223,6 +223,13 @@ window.CONTENT = {
         "d": "Madera nativa chilena de tono rosado rojizo y grano fino y parejo. Liviana, estable y noble para trabajar.",
         "tone": "Nativo · cálido",
         "img": "img/subida-mveko7fh-4ef6.webp"
+      },
+      {
+        "name": "Eucalipto ",
+        "img": "",
+        "c": "linear-gradient(90deg,#a0704f,#ab8164 30%,#8d6346 60%,#a6795a)",
+        "d": " Es una madera semidura y pesada, con alta resistencia al impacto y al desgaste.",
+        "tone": "Fuerte y macizo."
       }
     ]
   },
