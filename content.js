@@ -102,6 +102,27 @@ window.CONTENT = {
             "value": "Crea 100% Algodón"
           }
         ]
+      },
+      {
+        "id": "pmvgrlsx3",
+        "name": "Tablas de cortar. (Para Asado) ",
+        "category": "artesanias",
+        "price": 25000,
+        "stock": 5,
+        "shipping": "coordinar",
+        "imgs": [
+          "img/subida-mvgrno3w-e3qq.webp",
+          "img/subida-mvgrnmrk-yaid.webp",
+          "img/subida-mvgrnnlo-xszq.webp",
+          "img/subida-mvgrnnsg-22rl.webp"
+        ],
+        "desc": "Tablas de corte, hechas con haya europea y nogal americano.",
+        "specs": [
+          {
+            "label": "Tamaño",
+            "value": "30 x 45 cm"
+          }
+        ]
       }
     ]
   },
