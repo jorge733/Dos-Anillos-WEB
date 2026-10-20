@@ -5,7 +5,7 @@ window.CONTENT = {
     "phone": "+56 9 6177 2886",
     "email": "dosanilloschile@gmail.com",
     "orderEmails": "dosanilloschile@gmail.com",
-    "instagram": "dosanillos"
+    "instagram": "dos_anillos"
   },
   "hero": {
     "eyebrow": "Lutería Artesanal · desde 2024",
