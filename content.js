@@ -316,6 +316,26 @@ window.CONTENT = {
         "src": "img/taller-torno.webp",
         "title": "Nuestro taller",
         "text": ""
+      },
+      {
+        "src": "img/subida-mvgruijg-yvw6.webp",
+        "title": "",
+        "text": ""
+      },
+      {
+        "src": "img/subida-mvgrw2c0-d0mf.webp",
+        "title": "",
+        "text": ""
+      },
+      {
+        "src": "img/subida-mvgrx1xh-6v88.webp",
+        "title": "",
+        "text": ""
+      },
+      {
+        "src": "img/subida-mvgry7cx-crog.webp",
+        "title": "",
+        "text": ""
       }
     ],
     "teamTitle": "Lutieres",
