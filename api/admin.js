@@ -7,7 +7,7 @@
 //   GITHUB_REPO     opcional, por defecto jorge733/Dos-Anillos-WEB
 //   GITHUB_BRANCH   opcional, por defecto main
 const crypto = require("crypto");
-const { orders, notes, notifyShipped, passwordOk } = require("./_lib");
+const { orders, notes, stock, stockOf, notifyShipped, passwordOk } = require("./_lib");
 
 const REPO = process.env.GITHUB_REPO || "jorge733/Dos-Anillos-WEB";
 const BRANCH = process.env.GITHUB_BRANCH || "main";
@@ -37,11 +37,23 @@ async function head() {
   return { commit: ref.object.sha, tree: commit.tree.sha, file: tree.tree.find(e => e.path === FILE)?.sha };
 }
 
+async function readContent(sha) {
+  const text = Buffer.from((await gh(`/git/blobs/${sha}`)).content, "base64").toString("utf8");
+  return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+}
+// Sin base de datos el panel igual abre; solo no muestra las ventas.
+const soldMap = () => stock.get().then(s => s.sold, () => null);
+const stockVal = p => stockOf(p) === Infinity ? null : stockOf(p);
+
 const actions = {
   async load() {
     const { file } = await head();
-    const text = Buffer.from((await gh(`/git/blobs/${file}`)).content, "base64").toString("utf8");
-    return { sha: file, content: JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)) };
+    return { sha: file, content: await readContent(file), sold: await soldMap() };
+  },
+
+  // Unidades vendidas por producto desde que se fijó su stock (para el panel).
+  async sold() {
+    return { sold: await soldMap() };
   },
 
   // Pedidos de la tienda (los más nuevos primero).
@@ -98,7 +110,15 @@ const actions = {
     } });
     const commit = await gh("/git/commits", { method: "POST", body: { message: "Actualizar contenido desde el panel", tree: tree.sha, parents: [current.commit] } });
     await gh(`/git/refs/heads/${BRANCH}`, { method: "PATCH", body: { sha: commit.sha } });
-    return { sha: blobSha(text) };
+    // Si cambió el stock de un producto, el contador de vendidas vuelve a 0 desde ese número.
+    let stockError = "";
+    try {
+      const [{ base }, old] = await Promise.all([stock.get(), readContent(current.file)]);
+      const before = id => id in base ? stockVal({ stock: base[id] }) : stockVal(old.productos.products.find(p => p.id === id) || {});
+      await stock.reset(Object.fromEntries(content.productos.products
+        .filter(p => stockVal(p) !== before(p.id)).map(p => [p.id, stockVal(p)])));
+    } catch (e) { console.error("Stock", e); stockError = "Se guardó, pero no se pudo reiniciar el contador de ventas del stock (base de datos). Vuelve a guardar en un rato."; }
+    return { sha: blobSha(text), sold: await soldMap(), stockError };
   },
 };
 

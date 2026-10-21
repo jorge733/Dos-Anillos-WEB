@@ -2,7 +2,7 @@
 // POST /api/checkout { items, customer }      → crea el pedido y la preferencia de pago en Mercado Pago.
 // El navegador recibe { url } y lleva al cliente a pagar ahí. El envío se cobra según la región (o queda por coordinar con el vendedor).
 // Los precios se vuelven a calcular aquí: nunca se usa lo que diga el navegador.
-const { fail, handle, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, MP_TEST } = require("./_lib");
+const { fail, handle, content, stock, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, MP_TEST } = require("./_lib");
 
 const clean = (s, max) => String(s ?? "").trim().slice(0, max);
 
@@ -18,7 +18,7 @@ module.exports = handle(async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) throw fail(400, "Revisa tu correo.");
 
   const c = content();
-  const cart = priceCart(items, c);
+  const cart = priceCart(items, c, await stock.available(c));
   const shipping = quoteShipping(cart.lines, customer.region, c);
   const order = {
     id: newOrderId(), key: newKey(), status: "pendiente", method: "mercadopago", createdAt: Date.now(),
@@ -26,6 +26,8 @@ module.exports = handle(async (req, res) => {
   };
   const proto = req.headers["x-forwarded-proto"] || (/^(localhost|127.0.0.1)(:|$)/.test(req.headers.host) ? "http" : "https");
   const back = `${proto}://${req.headers.host}/api/mercadopago`;
+  // La vuelta lleva la clave del pedido: así solo quien pagó puede ver su comprobante o anular su pedido.
+  const ret = `${back}?k=${order.key}`;
   const pref = await mercadopago("POST", "/checkout/preferences", {
     items: [
       ...order.lines.map(l => ({ id: l.id, title: l.name, quantity: l.qty, unit_price: l.price, currency_id: "CLP" })),
@@ -33,7 +35,7 @@ module.exports = handle(async (req, res) => {
     ],
     payer: { name: customer.name, email: customer.email },
     external_reference: order.id,
-    back_urls: { success: back, failure: back, pending: back },
+    back_urls: { success: ret, failure: ret, pending: ret },
     statement_descriptor: "DOS ANILLOS",
     // Mercado Pago solo acepta estas dos opciones con direcciones https (no en localhost).
     ...(proto === "https" && { auto_return: "approved", notification_url: back }),

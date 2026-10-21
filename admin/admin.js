@@ -36,7 +36,7 @@ const TABS = [
         { k: "category", label: "Sección", type: "select", options: () => content.productos.categories.map(c => [c.id, c.name || "(sin nombre)"]) },
         { k: "price", label: "Precio (CLP)", type: "number", step: 500 },
         { k: "stock", label: "Unidades disponibles", type: "stock",
-          hint: "Se muestra «Quedan 3» en el sitio y no se puede comprar más que eso. Con 0 aparece como agotado. Déjalo vacío para no mostrar nada. Ojo: no baja sola con cada venta; actualízala tú." },
+          hint: "Las que tienes ahora. Baja sola con cada venta pagada: el sitio muestra «Quedan 3» y no deja comprar más. Con 0 aparece como agotado. Déjalo vacío para no controlar el stock." },
         { k: "shipping", label: "Envío", type: "select", options: [
             ["auto", "Automático: se cobra según la región (pestaña Envíos)"],
             ["coordinar", "Se calcula después del pago (productos grandes o pesados)"]],
@@ -190,6 +190,20 @@ const shade = (hex, f) => "#" + [1, 3, 5].map(i => {
 const gradient = hex => `linear-gradient(90deg,${hex},${shade(hex, .12)} 30%,${shade(hex, -.12)} 60%,${shade(hex, .06)})`;
 const baseColor = g => (String(g).match(/#[0-9a-f]{6}/i) || ["#a0704f"])[0];
 
+// ---------- Stock ----------
+// sold: unidades pagadas por producto desde que se fijó su stock (null si no hay base de datos).
+// savedStock: el stock guardado, para avisar que al cambiarlo el contador vuelve a 0.
+let sold = null, savedStock = {};
+const stockNum = s => s == null || s === "" ? null : Math.max(0, Math.floor(Number(s)) || 0);
+const rememberStock = () => (savedStock = Object.fromEntries(content.productos.products.map(p => [p.id, stockNum(p.stock)])));
+function soldText(p) {
+  const n = stockNum(p.stock), was = savedStock[p.id] ?? null;
+  if (p.id in savedStock && n !== was) return n == null ? "Al guardar, deja de controlarse el stock." : "Al guardar, este será el stock y el contador de vendidas parte de 0.";
+  if (n == null || !sold) return "";
+  const k = sold[p.id] || 0, left = Math.max(0, n - k);
+  return k ? `Vendidas desde la última vez que lo fijaste: ${k} · ${!left ? "en la tienda aparece agotado" : left === 1 ? "en la tienda queda 1" : `en la tienda quedan ${left}`}.` : "Sin ventas desde la última vez que lo fijaste.";
+}
+
 // ---------- Campos ----------
 function field(f, obj, rerender) {
   const v = obj[f.k];
@@ -208,10 +222,14 @@ function field(f, obj, rerender) {
       return h("label", {}, f.label, h("select", { onchange: e => set(e.target.value) },
         ...options.map(([value, text]) => h("option", { value, textContent: text, selected: value === current }))), hint);
     }
-    // Vacío = no se controla el stock (se guarda null).
-    case "stock":
+    // Vacío = no se controla el stock (se guarda null). Al lado, lo vendido desde que se fijó el número.
+    case "stock": {
+      const note = h("span", { className: "hint sold" });
+      const show = () => { note.textContent = soldText(obj); };
+      show();
       return h("label", {}, f.label, h("input", { type: "number", min: 0, step: 1, value: v ?? "", placeholder: "Sin indicar",
-        oninput: e => set(e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value)) || 0)) }), hint);
+        oninput: e => { set(e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value)) || 0)); show(); } }), note, hint);
+    }
     // Una fila por región; vacío = sin tarifa (el envío se coordina después).
     case "rates":
       return h("div", { className: "list" }, h("span", { className: "list-title", textContent: f.label }), hint,
@@ -301,6 +319,8 @@ const MP_TYPES = { credit_card: "Tarjeta de crédito", debit_card: "Tarjeta de d
 const payText = p => ["Mercado Pago", `${MP_TYPES[p.paymentType] || p.paymentType}${p.installments > 1 ? ` · ${p.installments} cuotas` : ""}${p.cardNumber ? ` · tarjeta **** ${p.cardNumber}` : ""} · operación ${p.operation}`];
 const clp = n => "$" + Math.round(n).toLocaleString("es-CL");
 const when = t => new Date(t).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" });
+// Número de WhatsApp a partir de lo que escribió el cliente (9 1234 5678 → 56912345678), igual que en los correos.
+const waNumber = phone => { const d = String(phone).replace(/\D/g, ""); return d.length === 9 && d[0] === "9" ? "56" + d : d; };
 let showAll = false;
 
 async function renderOrders() {
@@ -330,7 +350,7 @@ function orderCard(o) {
       h("span", { className: `badge st-${o.status}`, textContent: STATUS[o.status] || o.status })),
     h("p", { className: "hint", textContent: `Pedido ${o.id} · ${when(o.paidAt || o.createdAt)}` }),
     dl(["Correo", link(`mailto:${c.email}`, c.email)],
-       ["Teléfono", link(`https://wa.me/${c.phone.replace(/D/g, "")}`, c.phone)],
+       ["Teléfono", link(`https://wa.me/${waNumber(c.phone)}`, c.phone)],
        ["Dirección", `${c.address}, ${c.comuna}, ${c.region}`],
        ["Notas", c.notes]),
     h("ul", { className: "lines" },
@@ -411,7 +431,7 @@ async function renderNotes() {
 async function open(pw) {
   password = pw;
   const data = await api("load");
-  content = data.content; baseSha = data.sha;
+  content = data.content; baseSha = data.sha; sold = data.sold; rememberStock();
   sessionStorage.setItem("adminPw", pw);
   $("#login").hidden = true; $("#app").hidden = false;
   render();
@@ -430,9 +450,11 @@ $("#save").onclick = async () => {
   const json = JSON.stringify(content);
   const images = Object.entries(uploads).filter(([p]) => json.includes(p)).map(([path, u]) => ({ path, sha: u.sha }));
   try {
-    ({ sha: baseSha } = await api("save", { content, baseSha, images }));
+    const r = await api("save", { content, baseSha, images });
+    baseSha = r.sha; sold = r.sold; rememberStock();
     dirty = false;
-    setStatus("Guardado. El sitio se actualiza en 1 o 2 minutos.", "ok");
+    setStatus(r.stockError || "Guardado. El sitio se actualiza en 1 o 2 minutos.", r.stockError ? "bad" : "ok");
+    if (tab === "productos") render();
   } catch (e) { setStatus(e.message, "bad"); btn.disabled = false; }
 };
 

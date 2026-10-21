@@ -113,3 +113,6 @@ select{appearance:auto}
 .item>.btn{justify-self:start}
 .hint.ok{color:var(--sage-dark)}
 .hint.error{color:var(--error)}
+/* Vendidas desde que se fijó el stock (Catálogo). */
+.hint.sold{color:var(--wood);font-weight:500}
+.hint.sold:empty{display:none}

@@ -40,14 +40,22 @@ const isVideo = src => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(src));
 const coverOf = p => (p?.imgs || []).find(s => !isVideo(s));
 
 // Convierte el carrito del navegador ([{ id, qty }]) en líneas con el precio y las medidas reales.
-function priceCart(items, c = content()) {
+// «avail» es el stock real (stock.available); sin él se usa el número de content.js.
+function priceCart(items, c = content(), avail = {}) {
   if (!Array.isArray(items) || !items.length || items.length > 20) throw fail(400, "El carrito está vacío.");
-  const lines = items.map(({ id, qty }) => {
-    const p = c.productos.products.find(p => p.id === id);
-    const n = Math.floor(Number(qty));
-    if (!p) throw fail(400, "Un producto del carrito ya no está disponible. Revisa el carrito.");
+  // Un mismo producto repetido en varias líneas se junta en una, así no se salta el límite de stock.
+  const qtys = new Map();
+  for (const it of items) {
+    const n = Math.floor(Number(it?.qty));
     if (!(n >= 1 && n <= 20)) throw fail(400, "Cantidad inválida.");
-    const left = stockOf(p);
+    qtys.set(it.id, (qtys.get(it.id) || 0) + n);
+  }
+  const lines = [...qtys].map(([id, n]) => {
+    const p = c.productos.products.find(p => p.id === id);
+    if (!p) throw fail(400, "Un producto del carrito ya no está disponible. Revisa el carrito.");
+    if (n > 20) throw fail(400, "Puedes llevar hasta 20 unidades de cada producto por pedido.");
+    if (!(Number(p.price) > 0)) throw fail(400, `«${p.name}» no se puede comprar en línea todavía. Escríbenos por WhatsApp.`);
+    const left = p.id in avail ? avail[p.id] ?? Infinity : stockOf(p);
     if (!left) throw fail(400, `«${p.name}» se agotó. Quítalo del carrito para seguir.`);
     if (n > left) throw fail(400, `Solo ${left === 1 ? "queda 1 unidad" : `quedan ${left} unidades`} de «${p.name}». Ajusta la cantidad en el carrito.`);
     return { id, name: p.name, price: Number(p.price), qty: n };
@@ -63,7 +71,7 @@ function quoteShipping(lines, region, c = content()) {
   const special = lines.some(l => c.productos.products.find(p => p.id === l.id)?.shipping === "coordinar");
   if (special || rate == null || rate === "") return { code: "coordinar", name: "Por coordinar con el vendedor", price: 0 };
   const units = lines.reduce((s, l) => s + l.qty, 0);
-  return { code: "region", name: `Envío a ${region}`, price: Math.round(Number(rate) + Number(env.extra || 0) * (units - 1)) };
+  return { code: "region", name: `Envío a ${region}`, price: Math.max(0, Math.round((Number(rate) || 0) + (Number(env.extra) || 0) * (units - 1))) };
 }
 
 // ---------- Base de datos (Upstash Redis por REST) ----------
@@ -71,7 +79,7 @@ async function redis(...cmd) {
   const url = env("KV_REST_API_URL") || env("UPSTASH_REDIS_REST_URL");
   const token = env("KV_REST_API_TOKEN") || env("UPSTASH_REDIS_REST_TOKEN");
   if (!url || !token) throw fail(500, "Falta conectar la base de datos (Upstash) en Vercel.");
-  const r = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(cmd) });
+  const r = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(cmd), signal: AbortSignal.timeout(10000) });
   const data = await r.json().catch(() => ({}));
   if (!r.ok || data.error) throw new Error(`Redis: ${data.error || r.status}`);
   return data.result;
@@ -89,6 +97,36 @@ const orders = {
   claimPaid: async id => (await redis("SET", `paid:${id}`, "1", "NX", "EX", 90 * 24 * 3600)) === "OK",
 };
 
+// Stock que baja solo: content.js guarda lo que fijó el dueño y aquí se cuentan las ventas pagadas.
+// Hash "stock": número que fijó el dueño desde el panel (JSON: número o null). Se escribe al guardar, así sirve
+//   aunque Vercel todavía no publique el content.js nuevo. Si un producto no está, vale el de content.js.
+// Hash "sold": unidades pagadas desde esa vez. Vuelve a 0 cada vez que el dueño cambia el número.
+// HGETALL responde [campo, valor, campo, valor…].
+const fields = (flat, f) => { const o = {}; for (let i = 0; i < (flat || []).length; i += 2) o[flat[i]] = f(flat[i + 1]); return o; };
+const stock = {
+  async get() {
+    const [base, sold] = await Promise.all([redis("HGETALL", "stock"), redis("HGETALL", "sold")]);
+    return { base: fields(base, JSON.parse), sold: fields(sold, v => Number(v) || 0) };
+  },
+  // Disponible por producto: { id: número } o null si no se controla.
+  async available(c = content(), s) {
+    const { base, sold } = s || await stock.get();
+    return Object.fromEntries(c.productos.products.map(p => {
+      const n = stockOf(p.id in base ? { stock: base[p.id] } : p);
+      return [p.id, n === Infinity ? null : Math.max(0, n - (sold[p.id] || 0))];
+    }));
+  },
+  // Se llama una sola vez por pedido, cuando queda pagado.
+  async sell(lines) { for (const l of lines) await redis("HINCRBY", "sold", l.id, l.qty); },
+  // El dueño fijó un número nuevo: { id: número | null }.
+  async reset(changes) {
+    const ids = Object.keys(changes);
+    if (!ids.length) return;
+    await redis("HSET", "stock", ...ids.flatMap(id => [id, JSON.stringify(changes[id])]));
+    await redis("HSET", "sold", ...ids.flatMap(id => [id, 0]));
+  },
+};
+
 // Anotaciones privadas del panel (no van en content.js, que cualquiera puede ver).
 const notes = {
   async get() { const s = await redis("GET", "notes"); return s ? JSON.parse(s) : []; },
@@ -98,6 +136,11 @@ const notes = {
 // Número de pedido corto y sin símbolos raros (va a Mercado Pago como referencia).
 const newOrderId = () => "DA" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString("hex").toUpperCase();
 const newKey = () => crypto.randomBytes(16).toString("hex");
+// La clave «k» del pedido solo la conoce quien hizo la compra (va en la vuelta de Mercado Pago y en el comprobante).
+const keyOk = (k, o) => {
+  const a = Buffer.from(String(k ?? "")), b = Buffer.from(String(o?.key ?? ""));
+  return b.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+};
 
 // ---------- Mercado Pago (Checkout Pro) ----------
 // Las credenciales de prueba de Mercado Pago empiezan con "TEST-"; con ellas no se cobra de verdad.
@@ -136,7 +179,10 @@ async function applyMercadoPago(paymentId) {
   if (ok || (next && order.status === "pendiente")) order.status = next;
   if (ok) order.paidAt = Date.now();
   await orders.save(order);
-  if (ok && await orders.claimPaid(order.id)) await notifyPaid(order).catch(e => console.error("Correos", e));
+  if (ok && await orders.claimPaid(order.id)) {
+    await stock.sell(order.lines).catch(e => console.error("Stock", e));
+    await notifyPaid(order).catch(e => console.error("Correos", e));
+  }
   return order;
 }
 
@@ -148,6 +194,7 @@ async function mail(to, subject, html, replyTo) {
     method: "POST",
     headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: env("MAIL_FROM"), to, subject, html, reply_to: replyTo || undefined }),
+    signal: AbortSignal.timeout(15000),
   });
   if (!r.ok) console.error("Resend", r.status, await r.text());
   return r.ok;
@@ -280,4 +327,4 @@ async function notifyShipped(o) {
   }), c.general.email);
 }
 
-module.exports = { fail, handle, passwordOk, notes, content, priceCart, quoteShipping, orders, newOrderId, newKey, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };
+module.exports = { fail, handle, passwordOk, notes, stock, stockOf, content, priceCart, quoteShipping, orders, newOrderId, newKey, keyOk, mercadopago, applyMercadoPago, notifyPaid, notifyShipped, MP_TEST };

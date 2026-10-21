@@ -342,6 +342,7 @@ html{scroll-behavior:auto}
 .cart-list{list-style:none;border-top:1px solid var(--line);max-width:860px;margin-bottom:2rem}
 .cart-list li{display:flex;align-items:center;gap:1.2rem;padding:1.1rem 0;border-bottom:1px solid var(--line)}
 .cart-list img{width:72px;height:72px;object-fit:cover;background:var(--bone)}
+.cart-list .no-img{flex:none;width:72px;height:72px;background:var(--bone)}
 .cart-list li>div:not(.qty){flex:1;min-width:0}
 .cart-list h3{font-size:1.35rem}
 .cart-list strong{font-weight:500;color:var(--charcoal);min-width:5.5rem;text-align:right}

@@ -20,7 +20,7 @@ Configuración (una sola vez):
 ### Qué más tiene el panel
 
 - **Catálogo → Secciones del catálogo**: el catálogo se muestra dividido en secciones (por ahora *Lutería* y *Artesanías y otros*). Cada producto elige su sección.
-- **Unidades disponibles** (cada producto): el sitio muestra «Quedan 3 unidades» y no deja comprar más que eso; con 0 el producto aparece agotado. Vacío = no se muestra nada. No baja sola con cada venta: hay que actualizarla.
+- **Unidades disponibles** (cada producto): las que hay en el taller. Baja sola con cada venta pagada (ver *Stock* más abajo); el sitio muestra «Quedan 3 unidades» y no deja comprar más que eso; con 0 el producto aparece agotado. Vacío = no se controla ni se muestra nada. Debajo del número, el panel muestra cuántas se vendieron desde la última vez que se cambió.
 - **Anotaciones**: notas privadas que solo se ven en el panel. Se guardan solas en la base de datos (Upstash), no en `content.js`, que es público.
 - **Quiénes somos**: fotos y videos, cada uno con título y descripción.
 - **Datos generales → Instagram**: se muestra en Contacto y en el menú.
@@ -46,13 +46,23 @@ Cada producto (`/admin` → *Catálogo*) tiene la opción **Envío**:
 
 Una región sin precio también queda por coordinar.
 
-Funciones: `api/upload.js` (permiso para subir videos), `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante) y `api/_lib.js` (piezas compartidas). Los precios siempre se recalculan en el servidor.
+### Stock
+
+El dueño fija las unidades en `/admin` → *Catálogo* (se guardan en `content.js`). Las ventas no tocan `content.js` (sería un commit por venta): se cuentan en la base de datos (Upstash).
+
+- Hash `stock`: el número que fijó el dueño, guardado también ahí al apretar *Guardar y publicar*, así vale al tiro aunque Vercel tarde en publicar el `content.js` nuevo. Si un producto no aparece, se usa el de `content.js`.
+- Hash `sold`: unidades pagadas desde entonces. Sube cuando un pedido queda pagado (una sola vez por pedido) y vuelve a 0 cuando el dueño cambia el número del producto.
+- Disponible = stock − vendidas. `GET /api/stock` lo entrega (`{ stock: { id: unidades } }`, solo los productos que controlan stock); el sitio lo usa en el catálogo, la ficha y el carrito, y el carrito se ajusta si quedan menos. Al pagar, `api/checkout.js` vuelve a revisar contra la base de datos.
+
+Por eso el stock se cambia siempre desde el panel: si se edita `content.js` a mano, manda el número guardado en la base de datos. Si dos personas pagan la última unidad casi al mismo tiempo, las dos ventas quedan hechas y el panel muestra el producto agotado.
+
+Funciones: `api/upload.js` (permiso para subir videos), `api/checkout.js` (crea el pedido y el pago), `api/mercadopago.js` (vuelta y avisos de Mercado Pago), `api/order.js` (comprobante), `api/stock.js` (stock disponible) y `api/_lib.js` (piezas compartidas). Los precios y el stock siempre se recalculan en el servidor.
 
 Variables de entorno en Vercel:
 
 | Variable | Para qué |
 | --- | --- |
-| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Base de datos de pedidos. Se crean solas al conectar **Upstash for Redis** desde *Storage* en Vercel. |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Base de datos de pedidos, anotaciones y ventas por producto (stock). Se crean solas al conectar **Upstash for Redis** desde *Storage* en Vercel. |
 | `RESEND_API_KEY`, `MAIL_FROM` | Correos con Resend. `MAIL_FROM` debe usar un dominio verificado en Resend, ej.: `Dos Anillos <pedidos@dosanillos.cl>`. |
 | `MERCADOPAGO_ACCESS_TOKEN` | *Access Token* de Mercado Pago. Si empieza con `TEST-` (credenciales de prueba), no cobra y el carrito muestra el aviso de «modo de prueba». |
 

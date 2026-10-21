@@ -6,7 +6,8 @@ const C = window.CONTENT;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clp = n => Number(n).toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const waLink = () => `https://wa.me/${C.general.whatsapp}`;
+// wa.me solo acepta dígitos: si en el panel se escribió «+56 9 …», se limpian los espacios y el «+».
+const waLink = () => `https://wa.me/${String(C.general.whatsapp || "").replace(/\D/g, "")}`;
 const get = path => path.split(".").reduce((o, k) => o?.[k], C) ?? "";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 // Formato mínimo para los textos del panel: **negrita**, párrafos separados por una línea en blanco y listas con "- ".
@@ -71,7 +72,9 @@ addEventListener("hashchange", route);
 const product = id => C.productos.products.find(p => p.id === id);
 const shipLabel = p => p.shipping === "coordinar" ? "Envío por coordinar" : "Envío a todo Chile";
 // Unidades disponibles (/admin → Catálogo). Vacío = no se controla ni se muestra. Mismo cálculo que api/_lib.js.
-const stockOf = p => p.stock == null || p.stock === "" ? Infinity : Math.max(0, Math.floor(Number(p.stock)) || 0);
+// Al cargar se usa content.js; apenas responde /api/stock (lo que queda después de las ventas), se usa eso.
+let live = null;
+const stockOf = p => live ? live[p.id] ?? Infinity : p.stock == null || p.stock === "" ? Infinity : Math.max(0, Math.floor(Number(p.stock)) || 0);
 const maxQty = p => Math.min(20, stockOf(p));
 const stockLabel = p => { const n = stockOf(p); return !n ? "Agotado" : n === 1 ? "¡Última unidad!" : n < Infinity ? `Quedan ${n} unidades` : ""; };
 const stockHtml = p => stockLabel(p) ? `<p class="stock${stockOf(p) ? "" : " out"}">${stockLabel(p)}</p>` : "";
@@ -99,11 +102,12 @@ const card = p => `
     </div>
   </a>`;
 const groups = cats.map(c => ({ ...c, items: C.productos.products.filter(p => catOf(p) === c.id) })).filter(g => g.items.length);
-$("#products").innerHTML = groups.map(g => `
+const renderCatalog = () => { cardIndex = 0; $("#products").innerHTML = groups.map(g => `
   <div class="category" id="seccion-${esc(g.id)}">
     ${groups.length > 1 && g.name ? `<h3 class="cat-title">${esc(g.name)}</h3>` : ""}
     <div class="grid-products">${g.items.map(card).join("")}</div>
-  </div>`).join("");
+  </div>`).join(""); };
+renderCatalog();
 
 // ---------- Ficha de producto ----------
 // Miniaturas a la izquierda (abajo en celular), foto grande al centro y los datos de compra a la derecha.
@@ -122,7 +126,11 @@ function renderProduct(p) {
         <span class="counter">1 / ${n}</span>` : ""}
       </figure>
     </div>
-    <div class="buybox">
+    <div class="buybox">${buyHtml(p)}</div>
+  </article>`;
+}
+// Datos de compra; se vuelven a dibujar solos cuando llega el stock real.
+const buyHtml = p => `
       <h1>${esc(p.name)}</h1>
       <p class="price">${clp(p.price)}</p>
       <p class="ship">${shipLabel(p)}</p>
@@ -131,10 +139,7 @@ function renderProduct(p) {
         : `<button class="btn full center" type="button" disabled>Agotado</button>
       <p class="small muted sold-note">¿Lo quieres igual? <a class="link" href="${waLink()}?text=${encodeURIComponent(`Hola, me interesa «${p.name}». ¿Cuándo vuelve a estar disponible?`)}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></p>`}
       ${String(p.desc || "").trim() ? `<div class="pdp-desc"><h2>Descripción</h2>${md(p.desc)}</div>` : ""}
-      ${p.specs.length ? `<dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>` : ""}
-    </div>
-  </article>`;
-}
+      ${p.specs?.length ? `<dl class="specs">${p.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>` : ""}`;
 
 function showPhoto(i) {
   const pdp = $(".pdp"), p = product(pdp.dataset.id), n = p.imgs.length;
@@ -183,7 +188,7 @@ const ld = { "@context": "https://schema.org", "@graph": [
   ...C.productos.products.map(p => ({ "@type": "Product", "@id": `${SITE}#${p.id}`, sku: p.id, name: p.name,
     description: String(p.desc || "").replace(/\s+/g, " ").trim(), image: p.imgs.filter(s => !isVideo(s)).map(abs),
     brand: { "@type": "Brand", name: "Dos Anillos" },
-    additionalProperty: p.specs.map(s => ({ "@type": "PropertyValue", name: s.label.trim(), value: s.value.trim() })),
+    additionalProperty: (p.specs || []).map(s => ({ "@type": "PropertyValue", name: String(s.label ?? "").trim(), value: String(s.value ?? "").trim() })),
     offers: { "@type": "Offer", url: `${SITE}#producto/${encodeURIComponent(p.id)}`, price: p.price, priceCurrency: "CLP", availability: `https://schema.org/${stockOf(p) ? "InStock" : "OutOfStock"}`,
       itemCondition: "https://schema.org/NewCondition", seller: { "@id": ldStore["@id"] } } }))
 ] };
@@ -231,7 +236,9 @@ $("#feedback").addEventListener("submit", async e => {
   btn.disabled = true; btn.textContent = "Enviando…";
   try {
     const r = await fetch(`https://formsubmit.co/ajax/${C.general.email}`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(data) });
-    if (!r.ok) throw 0;
+    // FormSubmit responde 200 incluso cuando no envía (ej.: correo sin activar); el resultado real viene en «success».
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok || String(res.success) === "false") throw 0;
     f.reset(); toast("¡Gracias! Recibimos tu mensaje.");
   } catch { toast(`No se pudo enviar. Escríbenos a ${C.general.email}`); }
   btn.disabled = false; btn.textContent = "Enviar";
@@ -245,7 +252,8 @@ $$(".reveal, .section-head").forEach(el => { el.classList.add("reveal"); io.obse
 // Se guarda en este navegador ([{ id, qty }]); los precios reales los calcula el servidor al pagar.
 let cart = [];
 // Si desde la última visita un producto se agotó o quedan menos unidades, el carrito se ajusta.
-try { cart = JSON.parse(localStorage.getItem("cart") || "[]").filter(i => product(i.id)).map(i => ({ ...i, qty: Math.min(i.qty, maxQty(product(i.id))) })).filter(i => i.qty > 0); } catch {}
+const fitCart = () => (cart = cart.filter(i => product(i.id)).map(i => ({ ...i, qty: Math.min(i.qty, maxQty(product(i.id))) })).filter(i => i.qty > 0));
+try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); fitCart(); } catch { cart = []; }
 const saveCart = () => { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {} };
 const subtotal = () => cart.reduce((s, i) => s + product(i.id).price * i.qty, 0);
 
@@ -263,7 +271,7 @@ function renderCart() {
   $("#checkout").hidden = !n;
   $("#cart").innerHTML = n ? `
     <ul class="cart-list">${cart.map(i => { const p = product(i.id); return `
-      <li><img src="${esc(cover(p))}" alt=""><div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}${i.qty >= stockOf(p) ? ` · ${stockOf(p) === 1 ? "queda 1 unidad" : `quedan ${stockOf(p)} unidades`}` : ""}</p></div>
+      <li>${cover(p) ? `<img src="${esc(cover(p))}" alt="">` : `<span class="no-img"></span>`}<div><h3>${esc(p.name)}</h3><p class="muted">${clp(p.price)}${i.qty >= stockOf(p) ? ` · ${stockOf(p) === 1 ? "queda 1 unidad" : `quedan ${stockOf(p)} unidades`}` : ""}</p></div>
         <div class="qty" data-id="${esc(p.id)}"><button type="button" data-d="-1" aria-label="Quitar uno">−</button><span>${i.qty}</span><button type="button" data-d="1" aria-label="Agregar uno"${i.qty >= maxQty(p) ? " disabled" : ""}>+</button></div>
         <strong>${clp(p.price * i.qty)}</strong></li>`; }).join("")}
     </ul>` : `<p class="muted">Tu carrito está vacío.</p><a class="btn" href="#catalogo">Ver catálogo</a>`;
@@ -280,7 +288,7 @@ function quoteShipping(region) {
   const rate = regions.find(r => r.name === region)?.price;
   if (special() || rate == null || rate === "") return null;
   const units = cart.reduce((s, i) => s + i.qty, 0);
-  return Math.round(Number(rate) + Number(C.envios.extra || 0) * (units - 1));
+  return Math.max(0, Math.round((Number(rate) || 0) + (Number(C.envios.extra) || 0) * (units - 1)));
 }
 const regionSelect = $("#checkout").elements.region;
 regionSelect.append(...regions.map(r => new Option(r.name)));
@@ -385,14 +393,32 @@ $("#checkout").addEventListener("submit", async e => {
   } catch (err) {
     toast(err.message || "No se pudo iniciar el pago. Intenta de nuevo.");
     btn.textContent = "Pagar con Mercado Pago"; renderTotals();
+    loadStock(); // por si algo se agotó mientras tanto
   }
 });
 // Si el cliente vuelve con el botón "atrás" del navegador, el botón de pago queda como al principio.
 addEventListener("pageshow", e => { if (e.persisted) { $("#payBtn").textContent = "Pagar con Mercado Pago"; renderTotals(); } });
 
+// ---------- Stock real ----------
+// content.js trae el número que fijó el dueño; /api/stock descuenta las ventas pagadas desde entonces.
+async function loadStock() {
+  try {
+    const r = await fetch("/api/stock", { cache: "no-store" });
+    if (!r.ok) return;
+    live = (await r.json()).stock;
+  } catch { return; }
+  renderCatalog();
+  const pdp = $(".pdp");
+  if (pdp) $(".buybox", pdp).innerHTML = buyHtml(product(pdp.dataset.id));
+  const before = JSON.stringify(cart);
+  if (JSON.stringify(fitCart()) !== before) { saveCart(); toast("Ajustamos tu carrito: algunos productos ya no tienen tantas unidades disponibles."); }
+  renderCart();
+}
+
 const onCart = () => location.hash === "#carrito" && cart.length && checkTestMode();
-addEventListener("hashchange", onCart);
-renderCart(); onCart();
+// Al abrir el carrito se vuelve a pedir el stock, por si alguien compró mientras tanto.
+addEventListener("hashchange", () => { onCart(); if (location.hash === "#carrito") loadStock(); });
+renderCart(); onCart(); loadStock();
 
 // ---------- Resultado del pago (vuelta desde Mercado Pago) ----------
 const MP_TYPES = { credit_card: "Tarjeta de crédito", debit_card: "Tarjeta de débito", prepaid_card: "Tarjeta prepago", account_money: "Saldo de Mercado Pago", bank_transfer: "Transferencia", ticket: "Efectivo", digital_currency: "Mercado Crédito" };

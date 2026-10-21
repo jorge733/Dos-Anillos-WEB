@@ -9,7 +9,9 @@ const TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"];
 
 module.exports = handle(async (req, res) => {
   if (req.method !== "POST") throw fail(405, "Método no permitido.");
-  if (!passwordOk(decodeURIComponent(req.headers["x-admin-password"] || ""))) {
+  let pw = "";
+  try { pw = decodeURIComponent(req.headers["x-admin-password"] || ""); } catch {}
+  if (!passwordOk(pw)) {
     await new Promise(r => setTimeout(r, 1000)); // frena los intentos de adivinar la contraseña
     throw fail(401, "Contraseña incorrecta.");
   }
