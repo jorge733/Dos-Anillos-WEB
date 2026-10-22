@@ -329,13 +329,13 @@ window.CONTENT = {
       },
       {
         "src": "img/subida-mvgrx1xh-6v88.webp",
-        "title": "",
-        "text": ""
+        "title": "El jugar con diferentes materiales como esta lámpara de resina y roble.",
+        "text": "Este también es un prototipo el cual Busca mezclar materiales y iluminación y figura y expresar algo más. Es un sentimiento mayor que ver simplemente una lámpara que va directo a su propósito aquí se busca que al mirar esta lámpara te lleve a un pensamiento más allá y Qué su figura te sientas en lo orgánico."
       },
       {
         "src": "img/subida-mvgry7cx-crog.webp",
-        "title": "",
-        "text": ""
+        "title": "Desarrollo de marca.",
+        "text": "Este es nuestro primer logo el cual muestra un camino de desarrollo en donde dos años de trabajo Se ven expresados ya que vemos esto y vemos el nuevo logo que tenemos en la parte superior izquierda de la página en donde se ve que mantiene su estética y su idea en donde se ven estos dos anillos en el centro que conforman el ver un cilindro por la parte de arriba y ver ese mismo cilindro por la parte de abajo y donde cortamos a una imagen en 2D imaginándonos que ese cilindro continúa."
       }
     ],
     "teamTitle": "Lutieres",
