@@ -272,7 +272,7 @@ window.CONTENT = {
     ]
   },
   "cuidado": {
-    "eyebrow": "Cuidado",
+    "eyebrow": "Cuidado de flautas...",
     "title": "Cuidado y mantenimiento de tu flauta",
     "intro": "Para garantizar que tu instrumento te acompañe durante muchos años manteniendo su mejor sonido y belleza, sigue estos sencillos pasos de cuidado diario y periódico.",
     "steps": [
@@ -314,8 +314,8 @@ window.CONTENT = {
     "media": [
       {
         "src": "img/taller-torno.webp",
-        "title": "Nuestro taller",
-        "text": ""
+        "title": "Nuestro Torno para trabajar la Madera",
+        "text": "Este torno está hecho casero por Nicolás bordali para poder crear las flautas y crear los blocks, junto a los mangos de los limpiadores de la flauta. este torno cuenta con una bancada para trabajar desde el contrapunto a punto de 70 cm y un sistema de ventilación de lado a lado con ventilador.\nTambién cuenta con medidor de temperatura, rpm y voltaje ya que tiene un variador de frecuencia, así uno puede modificar la velocidad electrónicamente.T\nambién tiene una caja de cambios de cinco velocidades para poder Modificar el torque y la velocidad del trabajo tiene un motor de un cuarto HP y una robusta caja hecha en melamina"
       },
       {
         "src": "img/subida-mvgruijg-yvw6.webp",
