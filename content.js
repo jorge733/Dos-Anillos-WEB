@@ -315,12 +315,12 @@ window.CONTENT = {
       {
         "src": "img/taller-torno.webp",
         "title": "Nuestro Torno para trabajar la Madera",
-        "text": "Este torno está hecho casero por Nicolás bordali para poder crear las flautas y crear los blocks, junto a los mangos de los limpiadores de la flauta. este torno cuenta con una bancada para trabajar desde el contrapunto a punto de 70 cm y un sistema de ventilación de lado a lado con ventilador.\nTambién cuenta con medidor de temperatura, rpm y voltaje ya que tiene un variador de frecuencia, así uno puede modificar la velocidad electrónicamente.\nTambién tiene una caja de cambios de cinco velocidades para poder Modificar el torque y la velocidad del trabajo, tiene un motor de un cuarto HP y una robusta caja hecha en melamina."
+        "text": "Este torno está hecho casero por Nicolás bordalí para poder crear las flautas y crear los blocks, junto a los mangos de los limpiadores de la flauta. este torno cuenta con una bancada para trabajar desde el contrapunto a punto de 70 cm y un sistema de ventilación de lado a lado con ventilador.\nTambién cuenta con medidor de temperatura, rpm y voltaje ya que tiene un variador de frecuencia, así uno puede modificar la velocidad electrónicamente.\nTambién tiene una caja de cambios de cinco velocidades para poder Modificar el torque y la velocidad del trabajo, tiene un motor de un cuarto HP y una robusta caja hecha en melamina."
       },
       {
         "src": "img/subida-mvgruijg-yvw6.webp",
-        "title": "",
-        "text": ""
+        "title": "Proyecto vehículo.",
+        "text": "Este vehículo está creado por Nicolás bordalí, cuenta con una transmisión hecha por cadenas la cual conecta con las ruedas de carretilla, atrás tiene cuatro ruedas en un solo eje y delante tiene dos ruedas separadas las cuales tienen el sistema de dirección hecho con una pieza de dirección de cremallera, el embrague es un embrague mezclado el cual se activa a 2500 revoluciones y otro embrague integrado que al apretar el pedal se juntan dos láminas una que va al motor y otra que va hacia las cadenas El motor es un motor Honda GX 390 el cual se usa para máquinas especiales como compactadoras o tractores, muchas de las piezas de este auto están creadas o surtidas por personas que apoyaron el proyecto, este vehículo puede cargar a cuatro personas (Dos adelante y dos atrás) y llegar a una velocidad de 55 km por hora en su máximo rpm de 3600 revoluciones."
       },
       {
         "src": "img/subida-mvgrw2c0-d0mf.webp",
