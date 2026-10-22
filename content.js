@@ -310,7 +310,7 @@ window.CONTENT = {
   },
   "equipo": {
     "eyebrow": "Quiénes somos",
-    "title": "Las manos detrás de cada pieza",
+    "title": "Nuestro camino y proyectos",
     "media": [
       {
         "src": "img/taller-torno.webp",
@@ -324,12 +324,12 @@ window.CONTENT = {
       },
       {
         "src": "img/subida-mvgrw2c0-d0mf.webp",
-        "title": "Nuestro camino instrumentos como este xilófono",
+        "title": "Xilófono Pentatonico",
         "text": "Este xilófono es un prototipo el cual quiere jugar con Maderas dentro de una misma nota, y jugar con la forma, grosores y demás variables. El objetivo de esto es desarrollar un xilófono pentatónico el cual sea diferente que exprese algo más de lo orgánico y del ser humano, en su sonar y figura.\nAquí se puede ver el trabajo y esmero en donde uno puede buscar algo más dentro de lo cotidiano."
       },
       {
         "src": "img/subida-mvgrx1xh-6v88.webp",
-        "title": "El jugar con diferentes materiales como esta lámpara de resina y roble.",
+        "title": "El jugar con diferentes materiales (Lámpara de resina y roble)",
         "text": "Este también es un prototipo el cual Busca mezclar materiales y iluminación y figura y expresar algo más. Es un sentimiento mayor que ver simplemente una lámpara que va directo a su propósito aquí se busca que al mirar esta lámpara te lleve a un pensamiento más allá y Qué su figura te sientas en lo orgánico."
       },
       {
