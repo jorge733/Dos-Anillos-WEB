@@ -35,7 +35,7 @@ window.CONTENT = {
         "name": "Flauta pentatónica en La 432 Hz (Diestro)",
         "category": "luteria",
         "price": 69990,
-        "stock": null,
+        "stock": 7,
         "shipping": "auto",
         "imgs": [
           "img/subida-mv8vcmsn-da4d.webp",
@@ -70,7 +70,7 @@ window.CONTENT = {
         "name": "Limpiador para Flauta Pentatónica (Repuesto)",
         "category": "luteria",
         "price": 6990,
-        "stock": null,
+        "stock": 6,
         "shipping": "auto",
         "imgs": [
           "img/subida-mv8uppf8-f3ea.webp",
@@ -89,7 +89,7 @@ window.CONTENT = {
         "name": "Bolsa para Flauta Pentatónica (Repuesto)",
         "category": "luteria",
         "price": 9990,
-        "stock": null,
+        "stock": 10,
         "shipping": "auto",
         "imgs": [
           "img/subida-mv8tbico-kpgl.webp",
