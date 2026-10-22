@@ -324,8 +324,8 @@ window.CONTENT = {
       },
       {
         "src": "img/subida-mvgrw2c0-d0mf.webp",
-        "title": "",
-        "text": ""
+        "title": "Nuestro camino instrumentos como este xilófono",
+        "text": "Este xilófono es un prototipo el cual quiere jugar con Maderas dentro de una misma nota, y jugar con la forma, grosores y demás variables. El objetivo de esto es desarrollar un xilófono pentatónico el cual sea diferente que exprese algo más de lo orgánico y del ser humano, en su sonar y figura.\nAquí se puede ver el trabajo y esmero en donde uno puede buscar algo más dentro de lo cotidiano."
       },
       {
         "src": "img/subida-mvgrx1xh-6v88.webp",
