@@ -22,11 +22,11 @@ window.CONTENT = {
     "categories": [
       {
         "id": "luteria",
-        "name": "Lutería"
+        "name": "Luthería "
       },
       {
         "id": "artesanias",
-        "name": "Artesanías y otros"
+        "name": "Artesanías y Articulos pedagógicos"
       }
     ],
     "products": [
