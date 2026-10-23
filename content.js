@@ -335,7 +335,7 @@ window.CONTENT = {
       {
         "src": "img/subida-mvgry7cx-crog.webp",
         "title": "Desarrollo de marca.",
-        "text": "Este es nuestro primer logo el cual muestra un camino de desarrollo en donde dos años de trabajo Se ven expresados ya que vemos esto y vemos el nuevo logo que tenemos en la parte superior izquierda de la página en donde se ve que mantiene su estética y su idea en donde se ven estos dos anillos en el centro que conforman el ver un cilindro por la parte de arriba y ver ese mismo cilindro por la parte de abajo y donde cortamos a una imagen en 2D imaginándonos que ese cilindro continúa."
+        "text": "Este es nuestro primer logo, el cual muestra un camino de desarrollo,\nDonde dos años de trabajo Se ven expresados, ya que vemos esto y vemos el nuevo logo que tenemos en la parte superior izquierda de la página, en donde se ve que mantiene su estética, y su idea en donde se ven estos dos anillos en el centro que conforman el ver un cilindro por la parte de arriba y ver ese mismo cilindro por la parte de abajo y donde cortamos a una imagen en 2D imaginándonos que ese cilindro continúa."
       }
     ],
     "teamTitle": "Lutieres",
